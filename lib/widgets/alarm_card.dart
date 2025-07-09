@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/alarm.dart';
 import '../services/ringtone_service.dart';
+import '../utils/constants.dart';
 
+/// Widget displaying an alarm card with all alarm information
+/// 
+/// This widget shows alarm time, label, recurrence, ringtone, and actions.
+/// It uses Material Design principles and handles overflow gracefully.
 class AlarmCard extends StatelessWidget {
   final Alarm alarm;
   final VoidCallback? onToggle;
@@ -16,6 +21,7 @@ class AlarmCard extends StatelessWidget {
     this.onEdit,
   });
 
+  /// Get display name for the alarm sound
   String _getSoundDisplayName(String soundPath) {
     return RingtoneService.instance.getSoundDisplayName(soundPath);
   }
@@ -23,7 +29,10 @@ class AlarmCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(
+        horizontal: AppConstants.spacingMedium,
+        vertical: AppConstants.spacingSmall,
+      ),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: alarm.isEnabled 
@@ -47,10 +56,13 @@ class AlarmCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: AppConstants.spacingSmall),
             if (!alarm.isEnabled)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppConstants.spacingSmall,
+                  vertical: 2,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -77,20 +89,20 @@ class AlarmCard extends StatelessWidget {
                     : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: AppConstants.spacingSmall / 2),
             Wrap(
-              spacing: 8,
-              runSpacing: 4,
+              spacing: AppConstants.spacingSmall,
+              runSpacing: AppConstants.spacingSmall / 2,
               children: [
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.repeat,
-                      size: 16,
+                      size: AppConstants.iconSizeSmall,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: AppConstants.spacingSmall / 2),
                     Flexible(
                       child: Text(
                         alarm.weekDaysString,
@@ -109,10 +121,10 @@ class AlarmCard extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.music_note,
-                        size: 16,
+                        size: AppConstants.iconSizeSmall,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 2),
+                      SizedBox(width: AppConstants.spacingSmall / 4),
                       Flexible(
                         child: Text(
                           _getSoundDisplayName(alarm.soundPath),
@@ -128,7 +140,7 @@ class AlarmCard extends StatelessWidget {
                 if (alarm.vibrate)
                   Icon(
                     Icons.vibration,
-                    size: 16,
+                    size: AppConstants.iconSizeSmall,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
               ],

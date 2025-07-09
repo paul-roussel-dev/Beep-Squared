@@ -5,6 +5,11 @@ import '../services/alarm_service.dart';
 import '../widgets/alarm_card.dart';
 import 'add_alarm_screen.dart';
 
+/// Home screen displaying the list of alarms
+/// 
+/// This screen shows all user alarms with options to add, edit, delete,
+/// and toggle alarms. It handles the main navigation and provides access
+/// to alarm management functionality.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.title});
 
@@ -25,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadAlarms();
   }
 
+  /// Load alarms from storage
   Future<void> _loadAlarms() async {
     setState(() {
       _isLoading = true;
@@ -38,13 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  /// Handle back button press with confirmation
   Future<bool> _onWillPop() async {
-    // Demander confirmation avant de quitter l'application
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Exit App'),
-        content: const Text('Are you sure you want to exit Beep Squared?'),
+        content: Text('Are you sure you want to exit ${AppConstants.appName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

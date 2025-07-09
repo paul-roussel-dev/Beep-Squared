@@ -1,21 +1,28 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../utils/constants.dart';
 
+/// Service for managing ringtones (default and custom)
+/// 
+/// This service handles loading default ringtones from assets,
+/// importing custom ringtones, and managing their persistence.
 class RingtoneService {
-  static const String _customRingtonesKey = 'custom_ringtones';
   static RingtoneService? _instance;
   
+  /// Private constructor to prevent direct instantiation
   RingtoneService._();
   
+  /// Singleton instance accessor
   static RingtoneService get instance {
     _instance ??= RingtoneService._();
     return _instance!;
   }
 
-  // Sonneries par défaut (assets)
+  /// Default ringtones available from assets
   List<Map<String, String>> get defaultRingtones => [
     {'name': 'Default', 'path': '', 'type': 'system'},
     {'name': 'Alarm Clock', 'path': 'assets/sounds/alarm-clock-short-6402.mp3', 'type': 'asset'},
@@ -27,41 +34,41 @@ class RingtoneService {
     {'name': 'Soft Ring', 'path': 'assets/sounds/soft-ring-tone-313009.mp3', 'type': 'asset'},
   ];
 
-  // Récupérer les sonneries personnalisées
+  /// Get custom ringtones from storage
   Future<List<Map<String, String>>> getCustomRingtones() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? customRingtonesJson = prefs.getString(_customRingtonesKey);
+      final String? customRingtonesJson = prefs.getString(AppConstants.customRingtonesKey);
       
       if (customRingtonesJson == null) return [];
       
       final List<dynamic> customRingtonesList = json.decode(customRingtonesJson);
       return customRingtonesList.cast<Map<String, String>>();
     } catch (e) {
-      print('Error loading custom ringtones: $e');
+      debugPrint('Error loading custom ringtones: $e');
       return [];
     }
   }
 
-  // Sauvegarder les sonneries personnalisées
+  /// Save custom ringtones to storage
   Future<bool> saveCustomRingtones(List<Map<String, String>> customRingtones) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String customRingtonesJson = json.encode(customRingtones);
-      return await prefs.setString(_customRingtonesKey, customRingtonesJson);
+      return await prefs.setString(AppConstants.customRingtonesKey, customRingtonesJson);
     } catch (e) {
-      print('Error saving custom ringtones: $e');
+      debugPrint('Error saving custom ringtones: $e');
       return false;
     }
   }
 
-  // Récupérer toutes les sonneries (défaut + personnalisées)
+  /// Get all ringtones (default + custom)
   Future<List<Map<String, String>>> getAllRingtones() async {
     final customRingtones = await getCustomRingtones();
     return [...defaultRingtones, ...customRingtones];
   }
 
-  // Importer une sonnerie personnalisée
+  /// Import a custom ringtone from device
   Future<String?> importCustomRingtone() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -73,19 +80,19 @@ class RingtoneService {
         final file = File(result.files.single.path!);
         final fileName = result.files.single.name;
         
-        // Obtenir le répertoire des documents de l'app
+        // Get application documents directory
         final directory = await getApplicationDocumentsDirectory();
         final customSoundsDir = Directory('${directory.path}/custom_sounds');
         
-        // Créer le dossier s'il n'existe pas
+        // Create directory if it doesn't exist
         if (!await customSoundsDir.exists()) {
           await customSoundsDir.create(recursive: true);
         }
         
-        // Copier le fichier dans le dossier de l'app
+        // Copy file to app directory
         final newFile = await file.copy('${customSoundsDir.path}/$fileName');
         
-        // Ajouter à la liste des sonneries personnalisées
+        // Add to custom ringtones list
         final customRingtones = await getCustomRingtones();
         final newRingtone = {
           'name': _getDisplayName(fileName),
@@ -99,18 +106,18 @@ class RingtoneService {
         return newFile.path;
       }
     } catch (e) {
-      print('Error importing custom ringtone: $e');
+      debugPrint('Error importing custom ringtone: $e');
     }
     return null;
   }
 
-  // Supprimer une sonnerie personnalisée
+  /// Delete a custom ringtone
   Future<bool> deleteCustomRingtone(String ringtonePath) async {
     try {
       final customRingtones = await getCustomRingtones();
       customRingtones.removeWhere((ringtone) => ringtone['path'] == ringtonePath);
       
-      // Supprimer le fichier physique
+      // Delete physical file
       final file = File(ringtonePath);
       if (await file.exists()) {
         await file.delete();
@@ -118,12 +125,12 @@ class RingtoneService {
       
       return await saveCustomRingtones(customRingtones);
     } catch (e) {
-      print('Error deleting custom ringtone: $e');
+      debugPrint('Error deleting custom ringtone: $e');
       return false;
     }
   }
 
-  // Obtenir le nom d'affichage à partir du nom de fichier
+  /// Get display name from filename
   String _getDisplayName(String fileName) {
     final nameWithoutExtension = fileName.split('.').first;
     return nameWithoutExtension
@@ -133,11 +140,11 @@ class RingtoneService {
         .join(' ');
   }
 
-  // Obtenir le nom d'affichage d'une sonnerie par son chemin
+  /// Get display name for a sound by its path
   String getSoundDisplayName(String soundPath) {
     if (soundPath.isEmpty) return 'Default';
     
-    // Vérifier les sonneries par défaut
+    // Check default ringtones
     final defaultRingtone = defaultRingtones.firstWhere(
       (ringtone) => ringtone['path'] == soundPath,
       orElse: () => <String, String>{},
@@ -147,7 +154,7 @@ class RingtoneService {
       return defaultRingtone['name']!;
     }
     
-    // Pour les sonneries personnalisées, extraire le nom du fichier
+    // For custom ringtones, extract name from filename
     final fileName = soundPath.split('/').last;
     return _getDisplayName(fileName);
   }

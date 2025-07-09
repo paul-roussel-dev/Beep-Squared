@@ -28,7 +28,7 @@ lib/
 - **Classes** : PascalCase (`AlarmService`, `HomeScreen`)
 - **Variables/Fonctions** : camelCase (`isEnabled`, `loadRingtones`)
 - **Fichiers** : snake_case (`alarm_service.dart`, `home_screen.dart`)
-- **Constantes** : UPPER_SNAKE_CASE (`DEFAULT_RINGTONE_PATH`)
+- **Constantes** : lowerCamelCase (`defaultRingtonePath`, `appName`)
 
 ### Code Style
 - **Formatting** : Toujours utiliser `dart format`

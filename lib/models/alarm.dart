@@ -1,13 +1,36 @@
+import 'package:flutter/foundation.dart';
+
+/// Alarm model representing a scheduled alarm
+/// 
+/// This model contains all the information needed to schedule and display
+/// an alarm, including time, recurrence, sound settings, and state.
+@immutable
 class Alarm {
+  /// Unique identifier for the alarm
   final String id;
+  
+  /// User-friendly label for the alarm
   final String label;
+  
+  /// Time when the alarm should ring
   final DateTime time;
+  
+  /// Whether the alarm is currently enabled
   final bool isEnabled;
-  final List<int> weekDays; // 0=Monday, 6=Sunday
+  
+  /// Days of the week when alarm should repeat (0=Monday, 6=Sunday)
+  final List<int> weekDays;
+  
+  /// Path to the sound file to play
   final String soundPath;
+  
+  /// Snooze duration in minutes
   final int snoozeMinutes;
+  
+  /// Whether to vibrate when alarm rings
   final bool vibrate;
 
+  /// Creates a new alarm instance
   const Alarm({
     required this.id,
     required this.label,
@@ -19,7 +42,7 @@ class Alarm {
     this.vibrate = true,
   });
 
-  // Convert to JSON for storage
+  /// Converts alarm to JSON for storage
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -33,17 +56,17 @@ class Alarm {
     };
   }
 
-  // Create from JSON
+  /// Creates alarm from JSON storage
   factory Alarm.fromJson(Map<String, dynamic> json) {
     return Alarm(
-      id: json['id'],
-      label: json['label'],
-      time: DateTime.parse(json['time']),
-      isEnabled: json['isEnabled'] ?? true,
-      weekDays: List<int>.from(json['weekDays'] ?? []),
-      soundPath: json['soundPath'] ?? '',
-      snoozeMinutes: json['snoozeMinutes'] ?? 5,
-      vibrate: json['vibrate'] ?? true,
+      id: json['id'] as String,
+      label: json['label'] as String,
+      time: DateTime.parse(json['time'] as String),
+      isEnabled: json['isEnabled'] as bool? ?? true,
+      weekDays: List<int>.from(json['weekDays'] as List? ?? []),
+      soundPath: json['soundPath'] as String? ?? '',
+      snoozeMinutes: json['snoozeMinutes'] as int? ?? 5,
+      vibrate: json['vibrate'] as bool? ?? true,
     );
   }
 
