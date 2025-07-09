@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/alarm.dart';
 import '../utils/constants.dart';
+import '../services/ringtone_service.dart';
+import '../services/audio_preview_service.dart';
 
 class AddAlarmScreen extends StatefulWidget {
   const AddAlarmScreen({super.key});
@@ -17,39 +19,88 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   final List<int> _selectedWeekDays = [];
   bool _vibrate = true;
   int _snoozeMinutes = AppConstants.defaultSnoozeMinutes;
+  String _selectedSoundPath = '';
+  List<Map<String, String>> _availableRingtones = [];
+  
+  final AudioPreviewService _audioPreviewService = AudioPreviewService.instance;
 
   @override
   void initState() {
     super.initState();
     _selectedTime = TimeOfDay.now();
     _labelController = TextEditingController(text: AppConstants.defaultAlarmLabel);
+    _loadRingtones();
+  }
+
+  Future<void> _loadRingtones() async {
+    final ringtones = await RingtoneService.instance.getAllRingtones();
+    setState(() {
+      _availableRingtones = ringtones;
+    });
   }
 
   @override
   void dispose() {
     _labelController.dispose();
+    _audioPreviewService.stopPreview(); // Arrêter tout son en cours
     super.dispose();
+  }
+
+  Future<bool> _onWillPop() async {
+    // Vérifier si des changements ont été faits
+    if (_hasChanges()) {
+      final shouldLeave = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Discard Changes?'),
+          content: const Text('You have unsaved changes. Are you sure you want to leave?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Discard', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+      return shouldLeave ?? false;
+    }
+    return true;
+  }
+
+  bool _hasChanges() {
+    // Vérifier si des changements ont été faits par rapport aux valeurs par défaut
+    return _labelController.text != AppConstants.defaultAlarmLabel ||
+           _selectedWeekDays.isNotEmpty ||
+           !_vibrate ||
+           _snoozeMinutes != AppConstants.defaultSnoozeMinutes ||
+           _selectedSoundPath.isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Alarm'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          TextButton(
-            onPressed: _saveAlarm,
-            child: Text(
-              'Save',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Add Alarm'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          actions: [
+            TextButton(
+              onPressed: _saveAlarm,
+              child: Text(
+                'Save',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -114,6 +165,13 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             Card(
               child: Column(
                 children: [
+                  // Sound Selection
+                  ListTile(
+                    leading: const Icon(Icons.music_note),
+                    title: const Text('Ringtone'),
+                    subtitle: Text(_getSoundDisplayName(_selectedSoundPath)),
+                    onTap: _selectSound,
+                  ),
                   SwitchListTile(
                     secondary: const Icon(Icons.vibration),
                     title: const Text('Vibrate'),
@@ -135,6 +193,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -195,6 +254,96 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
     );
   }
 
+  Future<void> _selectSound() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => _RingtoneSelectionDialog(
+        availableRingtones: _availableRingtones,
+        selectedSoundPath: _selectedSoundPath,
+        onDeleteCustomRingtone: _deleteCustomRingtone,
+      ),
+    );
+
+    if (result != null) {
+      if (result == 'IMPORT_CUSTOM') {
+        await _importCustomRingtone();
+      } else {
+        setState(() {
+          _selectedSoundPath = result;
+        });
+      }
+    }
+  }
+
+  Future<void> _importCustomRingtone() async {
+    try {
+      final importedPath = await RingtoneService.instance.importCustomRingtone();
+      if (importedPath != null) {
+        setState(() {
+          _selectedSoundPath = importedPath;
+        });
+        await _loadRingtones(); // Recharger la liste
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Custom ringtone imported successfully!')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error importing ringtone: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteCustomRingtone(String ringtonePath) async {
+    // Demander confirmation
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Ringtone'),
+        content: const Text('Are you sure you want to delete this custom ringtone?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      Navigator.pop(context); // Fermer le dialogue de sélection
+      
+      final success = await RingtoneService.instance.deleteCustomRingtone(ringtonePath);
+      if (success) {
+        if (_selectedSoundPath == ringtonePath) {
+          setState(() {
+            _selectedSoundPath = ''; // Revenir au défaut
+          });
+        }
+        await _loadRingtones(); // Recharger la liste
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Custom ringtone deleted successfully!')),
+          );
+        }
+      }
+    }
+  }
+
+  String _getSoundDisplayName(String soundPath) {
+    return RingtoneService.instance.getSoundDisplayName(soundPath);
+  }
+
   String _formatTime(TimeOfDay time) {
     final now = DateTime.now();
     final dateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
@@ -219,10 +368,164 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       time: alarmTime,
       isEnabled: _isEnabled,
       weekDays: _selectedWeekDays,
+      soundPath: _selectedSoundPath,
       snoozeMinutes: _snoozeMinutes,
       vibrate: _vibrate,
     );
 
     Navigator.pop(context, alarm);
+  }
+}
+
+// Widget de dialogue personnalisé pour la sélection de sonnerie avec prévisualisation
+class _RingtoneSelectionDialog extends StatefulWidget {
+  final List<Map<String, String>> availableRingtones;
+  final String selectedSoundPath;
+  final Function(String) onDeleteCustomRingtone;
+
+  const _RingtoneSelectionDialog({
+    required this.availableRingtones,
+    required this.selectedSoundPath,
+    required this.onDeleteCustomRingtone,
+  });
+
+  @override
+  State<_RingtoneSelectionDialog> createState() => _RingtoneSelectionDialogState();
+}
+
+class _RingtoneSelectionDialogState extends State<_RingtoneSelectionDialog> {
+  final AudioPreviewService _audioPreviewService = AudioPreviewService.instance;
+  String? _currentlyPreviewing;
+
+  @override
+  void dispose() {
+    _audioPreviewService.stopPreview();
+    super.dispose();
+  }
+
+  Future<void> _togglePreview(String soundPath) async {
+    if (_currentlyPreviewing == soundPath) {
+      // Arrêter la prévisualisation
+      await _audioPreviewService.stopPreview();
+      setState(() {
+        _currentlyPreviewing = null;
+      });
+    } else {
+      // Jouer la prévisualisation
+      await _audioPreviewService.playPreview(soundPath);
+      setState(() {
+        _currentlyPreviewing = soundPath;
+      });
+      
+      // Arrêter automatiquement après 3 secondes
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted && _currentlyPreviewing == soundPath) {
+          setState(() {
+            _currentlyPreviewing = null;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Select Ringtone'),
+      contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.9, // 90% de la largeur de l'écran
+        height: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                itemCount: widget.availableRingtones.length,
+                itemBuilder: (context, index) {
+                  final sound = widget.availableRingtones[index];
+                  final soundPath = sound['path']!;
+                  final isSelected = widget.selectedSoundPath == soundPath;
+                  final isPreviewing = _currentlyPreviewing == soundPath;
+                  
+                  return ListTile(
+                    leading: Icon(
+                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text(
+                      sound['name']!,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    subtitle: isPreviewing 
+                        ? const Text('♪ Playing...', style: TextStyle(color: Colors.green)) 
+                        : null,
+                    trailing: SizedBox(
+                      width: sound['type'] == 'custom' ? 96 : 48, // Largeur fixe pour éviter l'overflow
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Bouton de prévisualisation (plus petit)
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(
+                                isPreviewing ? Icons.stop : Icons.play_arrow,
+                                color: isPreviewing ? Colors.red : Colors.green,
+                                size: 20,
+                              ),
+                              onPressed: () => _togglePreview(soundPath),
+                              tooltip: isPreviewing ? 'Stop' : 'Play',
+                            ),
+                          ),
+                          // Bouton de suppression pour les sonneries personnalisées (plus petit)
+                          if (sound['type'] == 'custom')
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                onPressed: () => widget.onDeleteCustomRingtone(soundPath),
+                                tooltip: 'Delete',
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    onTap: () {
+                      _audioPreviewService.stopPreview();
+                      Navigator.pop(context, soundPath);
+                    },
+                  );
+                },
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.add, color: Colors.green),
+              title: const Text('Import Custom Ringtone', style: TextStyle(color: Colors.green)),
+              onTap: () {
+                _audioPreviewService.stopPreview();
+                Navigator.pop(context, 'IMPORT_CUSTOM');
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            _audioPreviewService.stopPreview();
+            Navigator.pop(context);
+          },
+          child: const Text('Cancel'),
+        ),
+      ],
+    );
   }
 }

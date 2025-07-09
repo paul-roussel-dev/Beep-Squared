@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/alarm.dart';
+import '../services/ringtone_service.dart';
 
 class AlarmCard extends StatelessWidget {
   final Alarm alarm;
@@ -14,6 +15,10 @@ class AlarmCard extends StatelessWidget {
     this.onDelete,
     this.onEdit,
   });
+
+  String _getSoundDisplayName(String soundPath) {
+    return RingtoneService.instance.getSoundDisplayName(soundPath);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,29 +78,59 @@ class AlarmCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
               children: [
-                Icon(
-                  Icons.repeat,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.repeat,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        alarm.weekDaysString,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  alarm.weekDaysString,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                if (alarm.soundPath.isNotEmpty)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.music_note,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 2),
+                      Flexible(
+                        child: Text(
+                          _getSoundDisplayName(alarm.soundPath),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                if (alarm.vibrate) ...[
-                  const SizedBox(width: 12),
+                if (alarm.vibrate)
                   Icon(
                     Icons.vibration,
                     size: 16,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                ],
               ],
             ),
           ],

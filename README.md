@@ -1,28 +1,54 @@
 # Beep Squared
 
-A modern alarm clock application built with Flutter.
+Une application de réveil moderne construite avec Flutter.
 
-## Getting Started
+## 🚀 Démarrage Rapide
 
-This project is a cross-platform alarm clock application that provides reliable wake-up functionality with a clean, modern interface.
+Cette application de réveil cross-platform offre une fonctionnalité de réveil fiable avec une interface moderne et épurée.
 
-## Development
+### Installation
+1. Assurez-vous d'avoir Flutter installé
+2. Exécutez `flutter pub get` pour installer les dépendances
+3. Exécutez `flutter run` pour démarrer l'application
 
-To run this project:
+## ✨ Fonctionnalités
 
-1. Make sure you have Flutter installed
-2. Run `flutter pub get` to install dependencies
-3. Run `flutter run` to start the application
+- ⏰ **Gestion multiple d'alarmes** : Créez et gérez plusieurs alarmes
+- 🎵 **Sonneries personnalisées** : Importez vos propres sonneries
+- 🎧 **Prévisualisation audio** : Écoutez les sonneries avant de les sélectionner
+- 📱 **Support cross-platform** : iOS, Android, Web
+- 🎨 **Interface Material Design** : UI moderne et intuitive
+- 🌙 **Mode sombre** : Interface adaptée pour la nuit
+- ⚡ **Notifications fiables** : Système de réveil robuste
+- 🔄 **Navigation intelligente** : Gestion du bouton retour Android
 
-## Features
+## 📚 Documentation
 
-- ⏰ Multiple alarm management
-- 🔔 Customizable alarm tones
-- 📱 Cross-platform support (iOS, Android, Web)
-- 🎨 Modern Material Design UI
-- 🌙 Sleep-friendly dark mode
-- ⚡ Reliable alarm triggering
+Pour une documentation complète, consultez le dossier [`docs/`](docs/):
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **[Documentation Principale](docs/README.md)** - Vue d'ensemble et index
+- **[Architecture Technique](docs/ARCHITECTURE.md)** - Structure du projet et services
+- **[Guide de Développement](docs/DEVELOPMENT.md)** - Workflow et bonnes pratiques
+
+### Corrections et Fonctionnalités
+- **[Overflow des Cartes](docs/fixes/OVERFLOW_FIX.md)** - Correction des débordements UI
+- **[Navigation et Bouton Retour](docs/fixes/NAVIGATION.md)** - Gestion de la navigation
+- **[Prévisualisation Audio](docs/features/AUDIO_PREVIEW.md)** - Écoute des sonneries
+- **[Gestion des Sonneries](docs/features/RINGTONES.md)** - Import et gestion
+
+## 🔧 Technologies
+
+- **Flutter** : Framework UI cross-platform
+- **Dart** : Langage de programmation
+- **flutter_local_notifications** : Système de notifications
+- **audioplayers** : Lecture audio
+- **shared_preferences** : Stockage local
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! Consultez le [Guide de Développement](docs/DEVELOPMENT.md) pour commencer.
+
+---
+
+Pour plus d'aide sur le développement Flutter, consultez la
+[documentation officielle](https://docs.flutter.dev/).

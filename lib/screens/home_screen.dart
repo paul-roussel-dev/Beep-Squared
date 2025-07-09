@@ -38,14 +38,38 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<bool> _onWillPop() async {
+    // Demander confirmation avant de quitter l'application
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exit App'),
+        content: const Text('Are you sure you want to exit Beep Squared?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Exit'),
+          ),
+        ],
+      ),
+    );
+    return shouldExit ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        centerTitle: true,
-        actions: [
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text(widget.title),
+          centerTitle: true,
+          actions: [
           if (_alarms.isNotEmpty)
             PopupMenuButton<String>(
               onSelected: (value) {
@@ -77,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _addAlarm,
         tooltip: AppConstants.addAlarmTooltip,
         child: const Icon(Icons.add),
+      ),
       ),
     );
   }
