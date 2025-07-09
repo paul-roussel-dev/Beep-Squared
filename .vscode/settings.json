@@ -1,0 +1,7 @@
+{
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Follow conventional commits format: type(scope): description. Keep it concise and under 50 characters when possible. Use types: feat, fix, docs, style, refactor, test, chore. Examples: 'feat: add ringtone preview', 'fix: resolve alarm overflow', 'docs: update architecture guide'."
+    }
+  ]
+}
