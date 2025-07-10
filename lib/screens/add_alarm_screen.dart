@@ -6,7 +6,9 @@ import '../services/ringtone_service.dart';
 import '../services/audio_preview_service.dart';
 
 class AddAlarmScreen extends StatefulWidget {
-  const AddAlarmScreen({super.key});
+  final Alarm? alarm; // Alarme existante à éditer (optionnel)
+  
+  const AddAlarmScreen({super.key, this.alarm});
 
   @override
   State<AddAlarmScreen> createState() => _AddAlarmScreenState();
@@ -15,7 +17,7 @@ class AddAlarmScreen extends StatefulWidget {
 class _AddAlarmScreenState extends State<AddAlarmScreen> {
   late TimeOfDay _selectedTime;
   late TextEditingController _labelController;
-  final bool _isEnabled = true;
+  late bool _isEnabled;
   final List<int> _selectedWeekDays = [];
   bool _vibrate = true;
   int _snoozeMinutes = AppConstants.defaultSnoozeMinutes;
@@ -24,11 +26,30 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   
   final AudioPreviewService _audioPreviewService = AudioPreviewService.instance;
 
+  /// Check if we're in edit mode
+  bool get _isEditMode => widget.alarm != null;
+
   @override
   void initState() {
     super.initState();
-    _selectedTime = TimeOfDay.now();
-    _labelController = TextEditingController(text: AppConstants.defaultAlarmLabel);
+    
+    if (_isEditMode) {
+      // Initialize with existing alarm data
+      final alarm = widget.alarm!;
+      _selectedTime = TimeOfDay(hour: alarm.time.hour, minute: alarm.time.minute);
+      _labelController = TextEditingController(text: alarm.label);
+      _isEnabled = alarm.isEnabled;
+      _selectedWeekDays.addAll(alarm.weekDays);
+      _vibrate = alarm.vibrate;
+      _snoozeMinutes = alarm.snoozeMinutes;
+      _selectedSoundPath = alarm.soundPath;
+    } else {
+      // Initialize with default values
+      _selectedTime = TimeOfDay.now();
+      _labelController = TextEditingController(text: AppConstants.defaultAlarmLabel);
+      _isEnabled = true;
+    }
+    
     _loadRingtones();
   }
 
@@ -36,6 +57,10 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
     final ringtones = await RingtoneService.instance.getAllRingtones();
     setState(() {
       _availableRingtones = ringtones;
+      // Set default to first ringtone (Alarm Clock) only if not in edit mode and no sound selected
+      if (!_isEditMode && _availableRingtones.isNotEmpty && _selectedSoundPath.isEmpty) {
+        _selectedSoundPath = _availableRingtones.first['path'] ?? '';
+      }
     });
   }
 
@@ -72,12 +97,35 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   }
 
   bool _hasChanges() {
-    // Vérifier si des changements ont été faits par rapport aux valeurs par défaut
-    return _labelController.text != AppConstants.defaultAlarmLabel ||
-           _selectedWeekDays.isNotEmpty ||
-           !_vibrate ||
-           _snoozeMinutes != AppConstants.defaultSnoozeMinutes ||
-           _selectedSoundPath.isNotEmpty;
+    if (_isEditMode) {
+      // Compare with original alarm values
+      final original = widget.alarm!;
+      final currentTime = TimeOfDay(hour: original.time.hour, minute: original.time.minute);
+      
+      return _selectedTime != currentTime ||
+             _labelController.text != original.label ||
+             !_compareLists(_selectedWeekDays, original.weekDays) ||
+             _vibrate != original.vibrate ||
+             _snoozeMinutes != original.snoozeMinutes ||
+             _selectedSoundPath != original.soundPath ||
+             _isEnabled != original.isEnabled;
+    } else {
+      // Check against default values for new alarm
+      return _labelController.text != AppConstants.defaultAlarmLabel ||
+             _selectedWeekDays.isNotEmpty ||
+             !_vibrate ||
+             _snoozeMinutes != AppConstants.defaultSnoozeMinutes ||
+             _selectedSoundPath.isNotEmpty;
+    }
+  }
+
+  /// Helper method to compare two lists
+  bool _compareLists(List<int> list1, List<int> list2) {
+    if (list1.length != list2.length) return false;
+    for (int i = 0; i < list1.length; i++) {
+      if (list1[i] != list2[i]) return false;
+    }
+    return true;
   }
 
   @override
@@ -86,13 +134,13 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Add Alarm'),
+          title: Text(_isEditMode ? 'Edit Alarm' : 'Add Alarm'),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           actions: [
             TextButton(
               onPressed: _saveAlarm,
               child: Text(
-                'Save',
+                _isEditMode ? 'Update' : 'Save',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.bold,
@@ -146,17 +194,28 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Repeat',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildWeekDaySelector(),
-                  ],
-                ),
+                child:                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Repeat',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildPresetSelector(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Custom Days',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildWeekDaySelector(),
+                    ],
+                  ),
               ),
             ),
             const SizedBox(height: 16),
@@ -196,6 +255,107 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       ),
       ),
     );
+  }
+
+  Widget _buildPresetSelector() {
+    // Check current selection against presets
+    final isWeekdaySelected = _selectedWeekDays.length == 5 && 
+        _selectedWeekDays.every((day) => day >= 0 && day <= 4);
+    final isWeekendSelected = _selectedWeekDays.length == 2 && 
+        _selectedWeekDays.contains(5) && _selectedWeekDays.contains(6);
+    final isAllSelected = _selectedWeekDays.length == 7;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Select',
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: isWeekdaySelected
+                  ? FilledButton(
+                      onPressed: () => _selectPreset('weekday'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text('Weekday'),
+                    )
+                  : OutlinedButton(
+                      onPressed: () => _selectPreset('weekday'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text('Weekday'),
+                    ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: isWeekendSelected
+                  ? FilledButton(
+                      onPressed: () => _selectPreset('weekend'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text('Weekend'),
+                    )
+                  : OutlinedButton(
+                      onPressed: () => _selectPreset('weekend'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text('Weekend'),
+                    ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: isAllSelected
+                  ? FilledButton(
+                      onPressed: () => _selectPreset('all'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text('All'),
+                    )
+                  : OutlinedButton(
+                      onPressed: () => _selectPreset('all'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: const Text('All'),
+                    ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _selectPreset(String preset) {
+    setState(() {
+      _selectedWeekDays.clear();
+      switch (preset) {
+        case 'weekday':
+          // Monday to Friday (0-4)
+          _selectedWeekDays.addAll([0, 1, 2, 3, 4]);
+          break;
+        case 'weekend':
+          // Saturday and Sunday (5-6)
+          _selectedWeekDays.addAll([5, 6]);
+          break;
+        case 'all':
+          // All days (0-6)
+          _selectedWeekDays.addAll([0, 1, 2, 3, 4, 5, 6]);
+          break;
+      }
+    });
   }
 
   Widget _buildWeekDaySelector() {
@@ -326,7 +486,10 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       if (success) {
         if (_selectedSoundPath == ringtonePath) {
           setState(() {
-            _selectedSoundPath = ''; // Revenir au défaut
+            // Revenir au premier ringtone (Alarm Clock)
+            _selectedSoundPath = _availableRingtones.isNotEmpty 
+                ? _availableRingtones.first['path'] ?? ''
+                : '';
           });
         }
         await _loadRingtones(); // Recharger la liste
@@ -361,7 +524,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
     );
 
     final alarm = Alarm(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _isEditMode ? widget.alarm!.id : DateTime.now().millisecondsSinceEpoch.toString(),
       label: _labelController.text.isEmpty 
           ? AppConstants.defaultAlarmLabel 
           : _labelController.text,

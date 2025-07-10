@@ -187,10 +187,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _editAlarm(Alarm alarm) async {
-    // TODO: Implement edit functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit functionality coming soon!')),
+    final result = await Navigator.push<Alarm>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddAlarmScreen(alarm: alarm),
+      ),
     );
+    
+    if (result != null) {
+      await _alarmService.updateAlarm(result);
+      await _loadAlarms();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppConstants.alarmUpdatedMessage} ${result.formattedTime}'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _toggleAlarm(Alarm alarm) async {

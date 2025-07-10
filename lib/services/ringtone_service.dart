@@ -24,7 +24,6 @@ class RingtoneService {
 
   /// Default ringtones available from assets
   List<Map<String, String>> get defaultRingtones => [
-    {'name': 'Default', 'path': '', 'type': 'system'},
     {'name': 'Alarm Clock', 'path': 'assets/sounds/alarm-clock-short-6402.mp3', 'type': 'asset'},
     {'name': 'Bright Electronic', 'path': 'assets/sounds/bright-electronic-loop-251871.mp3', 'type': 'asset'},
     {'name': 'Level Up', 'path': 'assets/sounds/level-up-06-370051.mp3', 'type': 'asset'},
@@ -142,7 +141,7 @@ class RingtoneService {
 
   /// Get display name for a sound by its path
   String getSoundDisplayName(String soundPath) {
-    if (soundPath.isEmpty) return 'Default';
+    if (soundPath.isEmpty) return 'Alarm Clock'; // Default to first ringtone
     
     // Check default ringtones
     final defaultRingtone = defaultRingtones.firstWhere(

@@ -29,6 +29,7 @@ class AppConstants {
   static const String noAlarmsMessage = 'No alarms set';
   static const String addAlarmTooltip = 'Add alarm';
   static const String alarmSetMessage = 'Alarm set for';
+  static const String alarmUpdatedMessage = 'Alarm updated for';
   static const String alarmDeletedMessage = 'Alarm deleted';
   
   // Default values
