@@ -50,7 +50,7 @@ class AudioPreviewService {
       }
       
       // Auto-stop after preview duration
-      Future.delayed(Duration(seconds: AppConstants.previewDurationSeconds), () {
+      Future.delayed(const Duration(seconds: AppConstants.previewDurationSeconds), () {
         if (_currentlyPlaying == soundPath) {
           stopPreview();
         }

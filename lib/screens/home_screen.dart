@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Exit App'),
-        content: Text('Are you sure you want to exit ${AppConstants.appName}?'),
+        content: const Text('Are you sure you want to exit ${AppConstants.appName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

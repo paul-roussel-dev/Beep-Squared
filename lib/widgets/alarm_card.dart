@@ -29,7 +29,7 @@ class AlarmCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(
+      margin: const EdgeInsets.symmetric(
         horizontal: AppConstants.spacingMedium,
         vertical: AppConstants.spacingSmall,
       ),
@@ -56,10 +56,10 @@ class AlarmCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(width: AppConstants.spacingSmall),
+            const SizedBox(width: AppConstants.spacingSmall),
             if (!alarm.isEnabled)
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: AppConstants.spacingSmall,
                   vertical: 2,
                 ),
@@ -89,7 +89,7 @@ class AlarmCard extends StatelessWidget {
                     : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ),
-            SizedBox(height: AppConstants.spacingSmall / 2),
+            const SizedBox(height: AppConstants.spacingSmall / 2),
             Wrap(
               spacing: AppConstants.spacingSmall,
               runSpacing: AppConstants.spacingSmall / 2,
@@ -102,7 +102,7 @@ class AlarmCard extends StatelessWidget {
                       size: AppConstants.iconSizeSmall,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    SizedBox(width: AppConstants.spacingSmall / 2),
+                    const SizedBox(width: AppConstants.spacingSmall / 2),
                     Flexible(
                       child: Text(
                         alarm.weekDaysString,
@@ -124,7 +124,7 @@ class AlarmCard extends StatelessWidget {
                         size: AppConstants.iconSizeSmall,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      SizedBox(width: AppConstants.spacingSmall / 4),
+                      const SizedBox(width: AppConstants.spacingSmall / 4),
                       Flexible(
                         child: Text(
                           _getSoundDisplayName(alarm.soundPath),
