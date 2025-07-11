@@ -2,6 +2,9 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
+        // Fallback repositories pour les problèmes réseau
+        maven { url = uri("https://jcenter.bintray.com") }
     }
 }
 

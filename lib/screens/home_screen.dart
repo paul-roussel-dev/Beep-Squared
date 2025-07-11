@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import '../models/alarm.dart';
 import '../services/alarm_service.dart';
+import '../services/alarm_scheduler_service.dart';
+import '../services/alarm_manager_service.dart';
+import '../services/global_alarm_service.dart';
 import '../widgets/alarm_card.dart';
 import 'add_alarm_screen.dart';
 
@@ -21,13 +24,28 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AlarmService _alarmService = AlarmService.instance;
+  final AlarmSchedulerService _schedulerService = AlarmSchedulerService.instance;
+  final AlarmManagerService _managerService = AlarmManagerService.instance;
   List<Alarm> _alarms = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initializeAlarmServices();
     _loadAlarms();
+  }
+
+  /// Initialize alarm services
+  Future<void> _initializeAlarmServices() async {
+    // Set context for alarm manager
+    _managerService.setContext(context);
+    
+    // Set context for global alarm service
+    GlobalAlarmService.instance.setContext(context);
+    
+    // Initialize alarm manager
+    await _managerService.initialize();
   }
 
   /// Load alarms from storage
@@ -76,8 +94,8 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Text(widget.title),
           centerTitle: true,
           actions: [
-          if (_alarms.isNotEmpty)
-            PopupMenuButton<String>(
+            if (_alarms.isNotEmpty)
+              PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'clear_all') {
                   _showClearAllDialog();
@@ -104,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? _buildEmptyState()
               : _buildAlarmsList(),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'addAlarm',
         onPressed: _addAlarm,
         tooltip: AppConstants.addAlarmTooltip,
         child: const Icon(Icons.add),
@@ -172,7 +191,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (result != null) {
+      // Save alarm to storage
       await _alarmService.addAlarm(result);
+      
+      // Schedule alarm notification
+      if (result.isEnabled) {
+        await _schedulerService.scheduleAlarm(result);
+      }
+      
       await _loadAlarms();
       
       if (mounted) {
@@ -195,7 +221,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     
     if (result != null) {
+      // Update alarm in storage
       await _alarmService.updateAlarm(result);
+      
+      // Cancel old alarm notification
+      await _schedulerService.cancelAlarm(alarm.id);
+      
+      // Schedule new alarm notification if enabled
+      if (result.isEnabled) {
+        await _schedulerService.scheduleAlarm(result);
+      }
+      
       await _loadAlarms();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -209,7 +245,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleAlarm(Alarm alarm) async {
+    // Toggle alarm state
     await _alarmService.toggleAlarm(alarm.id);
+    
+    // Update alarm scheduling
+    if (alarm.isEnabled) {
+      // Alarm was enabled, now disabled - cancel notification
+      await _schedulerService.cancelAlarm(alarm.id);
+    } else {
+      // Alarm was disabled, now enabled - schedule notification
+      await _schedulerService.scheduleAlarm(alarm.copyWith(isEnabled: true));
+    }
+    
     await _loadAlarms();
   }
 
@@ -234,6 +281,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirmed == true) {
+      // Cancel alarm notification
+      await _schedulerService.cancelAlarm(alarm.id);
+      
+      // Delete alarm from storage
       await _alarmService.deleteAlarm(alarm.id);
       await _loadAlarms();
       

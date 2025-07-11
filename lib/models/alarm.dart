@@ -70,7 +70,7 @@ class Alarm {
     );
   }
 
-  // Copy with modifications
+  /// Copy with modifications
   Alarm copyWith({
     String? id,
     String? label,
@@ -93,15 +93,15 @@ class Alarm {
     );
   }
 
-  // Check if alarm is recurring (has weekdays set)
+  /// Check if alarm is recurring (has weekdays set)
   bool get isRecurring => weekDays.isNotEmpty;
 
-  // Get formatted time string
+  /// Get formatted time string
   String get formattedTime {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
-  // Get weekdays as string
+  /// Get weekdays as string
   String get weekDaysString {
     if (weekDays.isEmpty) return 'Once';
     
@@ -115,5 +115,40 @@ class Alarm {
     }
     
     return weekDays.map((day) => days[day]).join(', ');
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Alarm &&
+        other.id == id &&
+        other.label == label &&
+        other.time == time &&
+        other.isEnabled == isEnabled &&
+        listEquals(other.weekDays, weekDays) &&
+        other.soundPath == soundPath &&
+        other.snoozeMinutes == snoozeMinutes &&
+        other.vibrate == vibrate;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      id,
+      label,
+      time,
+      isEnabled,
+      Object.hashAll(weekDays),
+      soundPath,
+      snoozeMinutes,
+      vibrate,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Alarm{id: $id, label: $label, time: $time, isEnabled: $isEnabled, '
+        'weekDays: $weekDays, soundPath: $soundPath, snoozeMinutes: $snoozeMinutes, '
+        'vibrate: $vibrate}';
   }
 }

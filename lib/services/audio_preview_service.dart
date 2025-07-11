@@ -66,10 +66,14 @@ class AudioPreviewService {
   /// Stop the current preview
   Future<void> stopPreview() async {
     try {
-      await _audioPlayer.stop();
-      _currentlyPlaying = null;
+      if (_currentlyPlaying != null) {
+        debugPrint('Stopping audio preview: $_currentlyPlaying');
+        await _audioPlayer.stop();
+        _currentlyPlaying = null;
+      }
     } catch (e) {
       debugPrint('Error stopping preview: $e');
+      _currentlyPlaying = null; // Reset state even on error
     }
   }
 
@@ -91,5 +95,57 @@ class AudioPreviewService {
   /// Clean up resources
   void dispose() {
     _audioPlayer.dispose();
+  }
+
+  /// Play alarm sound in loop until stopped
+  Future<void> playAlarmLoop(String soundPath) async {
+    try {
+      // Stop any currently playing sound
+      await stopPreview();
+      
+      if (soundPath.isEmpty) {
+        // Default system sound - play a short beep repeatedly
+        await _playSystemBeepLoop();
+        return;
+      }
+      
+      _currentlyPlaying = soundPath;
+      
+      // Set player to loop mode
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      
+      if (soundPath.startsWith('assets/')) {
+        // Built-in app ringtone
+        await _audioPlayer.play(AssetSource(soundPath.replaceFirst('assets/', '')));
+      } else {
+        // Custom ringtone (local file)
+        final file = File(soundPath);
+        if (await file.exists()) {
+          await _audioPlayer.play(DeviceFileSource(soundPath));
+        }
+      }
+      
+    } catch (e) {
+      debugPrint('Error playing alarm loop: $e');
+      // On error, play system beep as fallback
+      await _playSystemBeepLoop();
+    }
+  }
+
+  /// Play system beep in loop for default alarm sound
+  Future<void> _playSystemBeepLoop() async {
+    // This is a simple implementation - in production you might want
+    // to use a proper looping mechanism
+    _currentlyPlaying = 'system_beep_loop';
+    _startSystemBeepLoop();
+  }
+
+  void _startSystemBeepLoop() {
+    if (_currentlyPlaying == 'system_beep_loop') {
+      SystemSound.play(SystemSoundType.click);
+      Future.delayed(const Duration(seconds: 1), () {
+        _startSystemBeepLoop();
+      });
+    }
   }
 }
