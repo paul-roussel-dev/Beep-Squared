@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <application
         android:label="beep_squared"
@@ -43,17 +46,11 @@
         <!-- Alarm Activity for displaying alarm screen -->
         <activity
             android:name=".AlarmActivity"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
-            android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            android:showOnLockScreen="true"
-            android:enableOnBackInvokedCallback="true" />
+            android:turnScreenOn="true" />
         
         <!-- Alarm receiver for handling alarms when app is closed -->
         <receiver android:name=".AlarmReceiver" android:enabled="true" android:exported="true">
@@ -64,6 +61,19 @@
         
         <!-- Alarm service for handling alarm triggers -->
         <service android:name=".AlarmService" android:enabled="true" android:exported="false" />
+        
+        <!-- Foreground service for reliable alarm display -->
+        <service 
+            android:name=".AlarmForegroundService" 
+            android:enabled="true" 
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+        
+        <!-- Overlay service for system-level alarm display -->
+        <service 
+            android:name=".AlarmOverlayService" 
+            android:enabled="true" 
+            android:exported="false" />
         
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

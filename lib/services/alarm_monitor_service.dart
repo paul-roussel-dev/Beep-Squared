@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/alarm.dart';
 import '../services/alarm_service.dart';
-import '../services/alarm_manager_service.dart';
 
 /// Service for monitoring and triggering alarms
 /// 
@@ -70,18 +69,13 @@ class AlarmMonitorService {
           // Mark as triggered IMMEDIATELY to prevent loops
           _triggeredAlarms.add(alarmKey);
           
-          debugPrint('Triggering alarm: ${alarm.label} at ${now.toString()}');
+          debugPrint('=== FLUTTER ALARM MONITORING DISABLED ===');
+          debugPrint('Native unified alarm system handles all triggering');
+          debugPrint('Alarm detected but NOT triggering Flutter screen: ${alarm.label}');
           
-          // For non-recurring alarms, disable them BEFORE triggering to prevent loops
-          if (alarm.weekDays.isEmpty) {
-            await _disableAlarm(alarm);
-            debugPrint('Disabled one-time alarm: ${alarm.label}');
-          }
-          
-          // Trigger the alarm immediately (non-blocking)
-          AlarmManagerService.instance.triggerAlarm(alarm.id).catchError((error) {
-            debugPrint('Error triggering alarm: $error');
-          });
+          // The native Android system already handles alarm triggering
+          // No need for Flutter-based triggering anymore
+          continue;
         }
       }
       
@@ -150,17 +144,6 @@ class AlarmMonitorService {
     } else {
       // Pour les alarmes récurrentes, utiliser la date + heure du jour (une fois par jour pour cette heure)
       return '${alarm.id}_${now.year}_${now.month}_${now.day}_${alarm.time.hour}_${alarm.time.minute}';
-    }
-  }
-
-  /// Disable an alarm after it's triggered (for one-time alarms)
-  Future<void> _disableAlarm(Alarm alarm) async {
-    try {
-      final updatedAlarm = alarm.copyWith(isEnabled: false);
-      await AlarmService.instance.updateAlarm(updatedAlarm);
-      debugPrint('Disabled one-time alarm: ${alarm.label}');
-    } catch (e) {
-      debugPrint('Error disabling alarm: $e');
     }
   }
 

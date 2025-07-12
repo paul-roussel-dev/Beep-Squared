@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/alarm.dart';
-import '../screens/alarm_screen.dart';
 
-/// Global alarm display service
+/// Global alarm display service - UNIFIED NATIVE VERSION
 /// 
-/// This service manages the display of alarm screens when alarms are triggered
-/// from native Android code. It maintains a reference to the current context
-/// to ensure alarm screens can be displayed even when the app is in background.
+/// This service now delegates to the native unified alarm system
+/// to ensure consistent alarm experience in-app and when backgrounded.
 class GlobalAlarmService {
   static GlobalAlarmService? _instance;
   static GlobalAlarmService get instance {
@@ -16,63 +14,35 @@ class GlobalAlarmService {
   
   GlobalAlarmService._();
   
-  BuildContext? _currentContext;
-  
-  /// Set the current context for alarm display
+  /// Set the current context (still maintained for compatibility)
   void setContext(BuildContext context) {
-    _currentContext = context;
+    debugPrint('GlobalAlarmService: Context set (compatibility mode - native system used)');
   }
   
   /// Clear the current context
   void clearContext() {
-    _currentContext = null;
+    debugPrint('GlobalAlarmService: Context cleared (compatibility mode)');
   }
   
-  /// Show alarm screen
+  /// Show alarm screen - DISABLED in favor of native unified system
   Future<void> showAlarmScreen(Alarm alarm) async {
-    if (_currentContext == null) {
-      debugPrint('No context available for global alarm screen');
-      return;
-    }
+    debugPrint('=== FLUTTER ALARM SCREEN DISABLED ===');
+    debugPrint('Using native unified alarm system instead for: ${alarm.label}');
+    debugPrint('The native system provides consistent experience in-app and background');
     
-    debugPrint('Showing global alarm screen for: ${alarm.label}');
-    
-    try {
-      await showDialog(
-        context: _currentContext!,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return WillPopScope(
-            onWillPop: () async => false, // Prevent back button dismiss
-            child: AlarmScreen(
-              alarm: alarm,
-              onDismiss: () {
-                Navigator.of(context).pop();
-                _dismissAlarm(alarm);
-              },
-              onSnooze: () {
-                Navigator.of(context).pop();
-                _snoozeAlarm(alarm);
-              },
-            ),
-          );
-        },
-      );
-    } catch (e) {
-      debugPrint('Error showing global alarm screen: $e');
-    }
+    // The native system will handle the alarm display
+    // This ensures the same alarm experience everywhere
+    return;
   }
   
-  /// Handle alarm dismiss
-  void _dismissAlarm(Alarm alarm) {
-    debugPrint('Global alarm dismissed: ${alarm.label}');
-    // Additional dismiss logic if needed
+  /// Show snooze notification - DISABLED
+  Future<void> showSnoozeNotification(Alarm alarm, DateTime snoozeTime) async {
+    debugPrint('Snooze notification disabled - native system handles this');
+    return;
   }
   
-  /// Handle alarm snooze
-  void _snoozeAlarm(Alarm alarm) {
-    debugPrint('Global alarm snoozed: ${alarm.label}');
-    // Additional snooze logic if needed
-    // Note: Snooze scheduling should be handled by the calling service
+  /// Dismiss alarm - DISABLED
+  void dismissAlarm(String alarmId) {
+    debugPrint('Alarm dismiss delegated to native system: $alarmId');
   }
 }

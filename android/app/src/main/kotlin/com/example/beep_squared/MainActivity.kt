@@ -4,7 +4,10 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -23,6 +26,9 @@ class MainActivity : FlutterActivity() {
             AlarmPermissionHelper.requestExactAlarmPermission(this)
         }
         
+        // Check and request overlay permission
+        checkOverlayPermission()
+        
         // Check if we were launched by an alarm
         handleAlarmIntent()
     }
@@ -36,10 +42,23 @@ class MainActivity : FlutterActivity() {
     private fun handleAlarmIntent() {
         val alarmId = intent.getStringExtra("alarmId")
         val triggerAlarm = intent.getBooleanExtra("triggerAlarm", false)
+        val action = intent.getStringExtra("action")
         
-        if (triggerAlarm && alarmId != null) {
-            // Trigger alarm in Flutter
-            triggerFlutterAlarm(alarmId)
+        when (action) {
+            "snooze" -> {
+                val scheduledTime = intent.getLongExtra("scheduledTime", 0)
+                val label = intent.getStringExtra("label") ?: "Snooze Alarm"
+                val soundPath = intent.getStringExtra("soundPath") ?: "default"
+                if (alarmId != null && scheduledTime > 0) {
+                    scheduleAlarm(alarmId, scheduledTime, label, soundPath)
+                }
+            }
+            else -> {
+                if (triggerAlarm && alarmId != null) {
+                    // Trigger alarm in Flutter if app is active
+                    triggerFlutterAlarm(alarmId)
+                }
+            }
         }
     }
 
@@ -53,8 +72,9 @@ class MainActivity : FlutterActivity() {
                         val alarmId = call.argument<String>("alarmId")!!
                         val scheduledTime = call.argument<Long>("scheduledTime")!!
                         val label = call.argument<String>("label") ?: "Alarm"
+                        val soundPath = call.argument<String>("soundPath") ?: "default"
                         
-                        scheduleAlarm(alarmId, scheduledTime, label)
+                        scheduleAlarm(alarmId, scheduledTime, label, soundPath)
                         result.success(true)
                     }
                     "cancelAlarm" -> {
@@ -66,12 +86,24 @@ class MainActivity : FlutterActivity() {
                         cancelAllAlarms()
                         result.success(true)
                     }
+                    "triggerNativeAlarm" -> {
+                        val alarmId = call.argument<String>("alarmId") ?: "flutter_alarm"
+                        val label = call.argument<String>("label") ?: "Alarm"
+                        val ringtone = call.argument<String>("ringtone") ?: "default"
+                        val immediate = call.argument<Boolean>("immediate") ?: false
+                        
+                        if (immediate) {
+                            // Trigger alarm immediately using the modern overlay with configured sound
+                            triggerImmediateAlarm(alarmId, label, ringtone)
+                        }
+                        result.success(true)
+                    }
                     else -> result.notImplemented()
                 }
             }
     }
 
-    private fun scheduleAlarm(alarmId: String, scheduledTime: Long, label: String) {
+    private fun scheduleAlarm(alarmId: String, scheduledTime: Long, label: String, soundPath: String) {
         try {
             // Check permission before scheduling
             if (!AlarmPermissionHelper.checkExactAlarmPermission(this)) {
@@ -83,6 +115,7 @@ class MainActivity : FlutterActivity() {
             val intent = Intent(this, AlarmReceiver::class.java).apply {
                 putExtra("alarmId", alarmId)
                 putExtra("label", label)
+                putExtra("soundPath", soundPath) // Passer le son configuré
             }
             
             val pendingIntent = PendingIntent.getBroadcast(
@@ -127,10 +160,45 @@ class MainActivity : FlutterActivity() {
         // For now, this is a placeholder
     }
 
+    private fun checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                android.util.Log.d("MainActivity", "Requesting overlay permission...")
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startActivity(intent)
+            } else {
+                android.util.Log.d("MainActivity", "Overlay permission already granted")
+            }
+        }
+    }
+
     private fun triggerFlutterAlarm(alarmId: String) {
         if (flutterEngine != null) {
             MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, ALARM_CHANNEL)
                 .invokeMethod("onAlarmTriggered", alarmId)
         }
+    }
+
+    private fun triggerImmediateAlarm(alarmId: String, label: String, ringtone: String) {
+        android.util.Log.d("MainActivity", "=== TRIGGERING MODERN ALARM OVERLAY ===")
+        android.util.Log.d("MainActivity", "AlarmId: $alarmId, Label: $label, Ringtone: $ringtone")
+        
+        try {
+            // Use ONLY the modern alarm overlay for consistency with configured sound
+            android.util.Log.d("MainActivity", "Starting modern alarm overlay with configured sound...")
+            AlarmOverlayService.showAlarmOverlay(this, alarmId, label, ringtone)
+            
+            android.util.Log.d("MainActivity", "=== MODERN ALARM OVERLAY TRIGGERED ===")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error triggering modern alarm: ${e.message}", e)
+        }
+    }
+
+    companion object {
+        private const val OVERLAY_PERMISSION_REQUEST_CODE = 1234
     }
 }

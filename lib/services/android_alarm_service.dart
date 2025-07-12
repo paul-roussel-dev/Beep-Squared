@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import '../models/alarm.dart';
-import '../services/alarm_service.dart';
-import '../services/global_alarm_service.dart';
+import 'alarm_service.dart';
 
 /// Service for handling native Android alarms
 /// 
@@ -64,33 +64,41 @@ class AndroidAlarmService {
     }
   }
 
-  /// Trigger alarm screen
+  /// Trigger alarm screen - ALWAYS use native approach for consistency
   Future<void> _triggerAlarmScreen(String alarmId) async {
     try {
-      // Load alarm details
-      final alarms = await AlarmService.instance.getAlarms();
-      final alarm = alarms.firstWhere(
-        (a) => a.id == alarmId,
-        orElse: () => Alarm(
-          id: alarmId,
-          label: 'Native Alarm',
-          time: DateTime.now(),
-          isEnabled: true,
-          weekDays: const [],
-          soundPath: 'alarm-clock-short-6402.mp3',
-          snoozeMinutes: 5,
-          vibrate: true,
-        ),
-      );
-
-      // Use GlobalAlarmService to show alarm screen
-      await GlobalAlarmService.instance.showAlarmScreen(alarm);
+      debugPrint('=== TRIGGERING NATIVE ALARM SCREEN FOR: $alarmId ===');
       
-      // Notify the stream
+      // Get alarm details to pass ringtone info
+      final alarmService = AlarmService.instance;
+      final alarms = await alarmService.getAlarms();
+      final alarm = alarms.firstWhere((a) => a.id == alarmId, orElse: () => Alarm(
+        id: alarmId,
+        time: DateTime.now(),
+        label: 'Alarm',
+        isEnabled: true,
+        soundPath: 'default',
+        vibrate: true,
+        weekDays: [],
+      ));
+      
+      // ALWAYS use the native alarm display system with configured sound
+      await _channel.invokeMethod('triggerNativeAlarm', {
+        'alarmId': alarmId,
+        'label': alarm.label,
+        'ringtone': alarm.soundPath,
+        'immediate': true,
+      });
+      
+      // Also notify the stream for any Flutter listeners
       _alarmController?.add(alarmId);
       
+      debugPrint('Native alarm screen triggered successfully with ringtone: ${alarm.soundPath}');
+      
     } catch (e) {
-      debugPrint('Error triggering alarm screen: $e');
+      debugPrint('Error triggering native alarm screen: $e');
+      // Fallback: still notify the stream
+      _alarmController?.add(alarmId);
     }
   }
 
