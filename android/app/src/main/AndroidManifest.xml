@@ -59,16 +59,6 @@
             </intent-filter>
         </receiver>
         
-        <!-- Alarm service for handling alarm triggers -->
-        <service android:name=".AlarmService" android:enabled="true" android:exported="false" />
-        
-        <!-- Foreground service for reliable alarm display -->
-        <service 
-            android:name=".AlarmForegroundService" 
-            android:enabled="true" 
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
-        
         <!-- Overlay service for system-level alarm display -->
         <service 
             android:name=".AlarmOverlayService" 

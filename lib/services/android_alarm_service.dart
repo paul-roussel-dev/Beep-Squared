@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'dart:async';
 import '../models/alarm.dart';
 import 'alarm_service.dart';
@@ -79,7 +78,7 @@ class AndroidAlarmService {
         isEnabled: true,
         soundPath: 'default',
         vibrate: true,
-        weekDays: [],
+        weekDays: const [],
       ));
       
       // ALWAYS use the native alarm display system with configured sound

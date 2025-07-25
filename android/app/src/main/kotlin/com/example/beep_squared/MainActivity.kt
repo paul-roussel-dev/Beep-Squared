@@ -14,7 +14,6 @@ import io.flutter.plugin.common.MethodChannel
 import java.util.*
 
 class MainActivity : FlutterActivity() {
-    private val ALARM_CHANNEL = "beep_squared.alarm/native"
     private lateinit var alarmManager: AlarmManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,15 +39,15 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun handleAlarmIntent() {
-        val alarmId = intent.getStringExtra("alarmId")
+        val alarmId = intent.getStringExtra(AlarmConfig.EXTRA_ALARM_ID)
         val triggerAlarm = intent.getBooleanExtra("triggerAlarm", false)
-        val action = intent.getStringExtra("action")
+        val action = intent.getStringExtra(AlarmConfig.EXTRA_ACTION)
         
         when (action) {
-            "snooze" -> {
-                val scheduledTime = intent.getLongExtra("scheduledTime", 0)
-                val label = intent.getStringExtra("label") ?: "Snooze Alarm"
-                val soundPath = intent.getStringExtra("soundPath") ?: "default"
+            AlarmConfig.ACTION_SNOOZE -> {
+                val scheduledTime = intent.getLongExtra(AlarmConfig.EXTRA_SCHEDULED_TIME, 0)
+                val label = intent.getStringExtra(AlarmConfig.EXTRA_LABEL) ?: "Snooze Alarm"
+                val soundPath = intent.getStringExtra(AlarmConfig.EXTRA_SOUND_PATH) ?: AlarmConfig.DEFAULT_SOUND_PATH
                 if (alarmId != null && scheduledTime > 0) {
                     scheduleAlarm(alarmId, scheduledTime, label, soundPath)
                 }
@@ -65,20 +64,20 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ALARM_CHANNEL)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, AlarmConfig.ALARM_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "scheduleAlarm" -> {
-                        val alarmId = call.argument<String>("alarmId")!!
-                        val scheduledTime = call.argument<Long>("scheduledTime")!!
-                        val label = call.argument<String>("label") ?: "Alarm"
-                        val soundPath = call.argument<String>("soundPath") ?: "default"
+                        val alarmId = call.argument<String>(AlarmConfig.EXTRA_ALARM_ID)!!
+                        val scheduledTime = call.argument<Long>(AlarmConfig.EXTRA_SCHEDULED_TIME)!!
+                        val label = call.argument<String>(AlarmConfig.EXTRA_LABEL) ?: "Alarm"
+                        val soundPath = call.argument<String>(AlarmConfig.EXTRA_SOUND_PATH) ?: AlarmConfig.DEFAULT_SOUND_PATH
                         
                         scheduleAlarm(alarmId, scheduledTime, label, soundPath)
                         result.success(true)
                     }
                     "cancelAlarm" -> {
-                        val alarmId = call.argument<String>("alarmId")!!
+                        val alarmId = call.argument<String>(AlarmConfig.EXTRA_ALARM_ID)!!
                         cancelAlarm(alarmId)
                         result.success(true)
                     }
@@ -87,9 +86,9 @@ class MainActivity : FlutterActivity() {
                         result.success(true)
                     }
                     "triggerNativeAlarm" -> {
-                        val alarmId = call.argument<String>("alarmId") ?: "flutter_alarm"
-                        val label = call.argument<String>("label") ?: "Alarm"
-                        val ringtone = call.argument<String>("ringtone") ?: "default"
+                        val alarmId = call.argument<String>(AlarmConfig.EXTRA_ALARM_ID) ?: "flutter_alarm"
+                        val label = call.argument<String>(AlarmConfig.EXTRA_LABEL) ?: "Alarm"
+                        val ringtone = call.argument<String>("ringtone") ?: AlarmConfig.DEFAULT_SOUND_PATH
                         val immediate = call.argument<Boolean>("immediate") ?: false
                         
                         if (immediate) {
@@ -177,7 +176,7 @@ class MainActivity : FlutterActivity() {
 
     private fun triggerFlutterAlarm(alarmId: String) {
         if (flutterEngine != null) {
-            MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, ALARM_CHANNEL)
+            MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, AlarmConfig.ALARM_CHANNEL)
                 .invokeMethod("onAlarmTriggered", alarmId)
         }
     }

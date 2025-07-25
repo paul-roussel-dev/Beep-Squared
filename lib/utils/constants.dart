@@ -8,17 +8,14 @@ class AppConstants {
   // App information
   static const String appName = 'Beep Squared';
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Modern Alarm Clock';
   
   // Colors following Material Design 3
   static const Color primaryColor = Colors.indigo;
-  static const Color accentColor = Colors.amber;
   
   // Spacing constants (multiples of 8dp)
   static const double spacingSmall = 8.0;
   static const double spacingMedium = 16.0;
   static const double spacingLarge = 24.0;
-  static const double spacingXLarge = 32.0;
   
   // UI constants
   static const double iconSizeSmall = 16.0;
@@ -39,7 +36,6 @@ class AppConstants {
   
   // Audio constants
   static const int previewDurationSeconds = 3;
-  static const double defaultVolume = 0.7;
   
   // Storage keys
   static const String alarmsStorageKey = 'alarms';

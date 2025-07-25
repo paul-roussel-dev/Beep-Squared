@@ -1,7 +1,48 @@
 {
+  // Configuration GitHub Copilot Instructions
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "text": "Follow conventional commits format: type(scope): description. Keep it concise and under 50 characters when possible. Use types: feat, fix, docs, style, refactor, test, chore. Examples: 'feat: add ringtone preview', 'fix: resolve alarm overflow', 'docs: update architecture guide'."
+      "file": ".github/instructions/commit-message.instructions.md"
+    },
+    {
+      "text": "STRICT: Use conventional commits: type(scope): description. Max 50 chars. Types: feat, fix, docs, style, refactor, test, chore. NO explanations, ONLY commit title."
     }
-  ]
+  ],
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": ".github/instructions/coding-guidelines.instructions.md"
+    }
+  ],
+  "github.copilot.chat.reviewSelection.instructions": [
+    {
+      "file": ".github/instructions/coding-guidelines.instructions.md"
+    }
+  ],
+  
+  // Instructions file locations
+  "github.copilot.chat.instructionsFilesLocations": {
+    ".github/instructions": true,
+    ".vscode/instructions": true
+  },
+  
+  // Additional VS Code settings for project
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "dart.lineLength": 80,
+  "dart.previewFlutterUiGuides": true,
+  "dart.previewFlutterUiGuidesCustomTracking": true,
+  
+  // Flutter specific
+  "flutter.experiments": {
+    "flutter-preview": true
+  },
+  "flutter.enableSnippets": true,
+  
+  // Files associations
+  "files.associations": {
+    "*.md": "markdown",
+    "pubspec.yaml": "yaml"
+  }
 }

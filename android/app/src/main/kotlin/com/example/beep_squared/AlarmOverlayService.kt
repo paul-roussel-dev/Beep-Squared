@@ -32,13 +32,18 @@ class AlarmOverlayService : Service() {
     private var vibrator: Vibrator? = null
     
     companion object {
-        fun showAlarmOverlay(context: Context, alarmId: String, label: String, soundPath: String = "default") {
+        fun showAlarmOverlay(context: Context, alarmId: String, label: String, soundPath: String = AlarmConfig.DEFAULT_SOUND_PATH) {
             val intent = Intent(context, AlarmOverlayService::class.java).apply {
-                putExtra("alarmId", alarmId)
-                putExtra("label", label)
-                putExtra("soundPath", soundPath)
+                putExtra(AlarmConfig.EXTRA_ALARM_ID, alarmId)
+                putExtra(AlarmConfig.EXTRA_LABEL, label)
+                putExtra(AlarmConfig.EXTRA_SOUND_PATH, soundPath)
             }
             context.startService(intent)
+        }
+        
+        fun stopAlarmOverlay(context: Context, alarmId: String) {
+            val intent = Intent(context, AlarmOverlayService::class.java)
+            context.stopService(intent)
         }
     }
     
