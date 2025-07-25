@@ -5,16 +5,18 @@ import '../models/alarm.dart';
 import 'alarm_service.dart';
 
 /// Service for handling native Android alarms
-/// 
+///
 /// This service uses Android's AlarmManager to schedule exact alarms
 /// that can trigger even when the app is closed or the device is sleeping.
 class AndroidAlarmService {
   static AndroidAlarmService? _instance;
-  static const MethodChannel _channel = MethodChannel('beep_squared.alarm/native');
-  
+  static const MethodChannel _channel = MethodChannel(
+    'beep_squared.alarm/native',
+  );
+
   /// Private constructor
   AndroidAlarmService._();
-  
+
   /// Singleton instance
   static AndroidAlarmService get instance {
     _instance ??= AndroidAlarmService._();
@@ -30,10 +32,10 @@ class AndroidAlarmService {
 
     // Set up method call handler for native -> Flutter communication
     _channel.setMethodCallHandler(_handleMethodCall);
-    
+
     // Initialize alarm stream
     _alarmController = StreamController<String>.broadcast();
-    
+
     _isInitialized = true;
     debugPrint('Android alarm service initialized');
   }
@@ -41,20 +43,20 @@ class AndroidAlarmService {
   /// Handle method calls from native Android code
   Future<dynamic> _handleMethodCall(MethodCall call) async {
     debugPrint('Received method call: ${call.method}');
-    
+
     switch (call.method) {
       case 'onAlarmTriggered':
         final String alarmId = call.arguments as String;
         debugPrint('Alarm triggered from Android: $alarmId');
-        
+
         // Trigger the alarm screen
         await _triggerAlarmScreen(alarmId);
         return null;
-        
+
       case 'requestAlarmPermissions':
         // Handle permission requests if needed
         return true;
-        
+
       default:
         throw PlatformException(
           code: 'Unimplemented',
@@ -67,20 +69,23 @@ class AndroidAlarmService {
   Future<void> _triggerAlarmScreen(String alarmId) async {
     try {
       debugPrint('=== TRIGGERING NATIVE ALARM SCREEN FOR: $alarmId ===');
-      
+
       // Get alarm details to pass ringtone info
       final alarmService = AlarmService.instance;
       final alarms = await alarmService.getAlarms();
-      final alarm = alarms.firstWhere((a) => a.id == alarmId, orElse: () => Alarm(
-        id: alarmId,
-        time: DateTime.now(),
-        label: 'Alarm',
-        isEnabled: true,
-        soundPath: 'default',
-        vibrate: true,
-        weekDays: const [],
-      ));
-      
+      final alarm = alarms.firstWhere(
+        (a) => a.id == alarmId,
+        orElse: () => Alarm(
+          id: alarmId,
+          time: DateTime.now(),
+          label: 'Alarm',
+          isEnabled: true,
+          soundPath: 'default',
+          vibrate: true,
+          weekDays: const [],
+        ),
+      );
+
       // ALWAYS use the native alarm display system with configured sound
       await _channel.invokeMethod('triggerNativeAlarm', {
         'alarmId': alarmId,
@@ -88,16 +93,43 @@ class AndroidAlarmService {
         'ringtone': alarm.soundPath,
         'immediate': true,
       });
-      
+
       // Also notify the stream for any Flutter listeners
       _alarmController?.add(alarmId);
-      
-      debugPrint('Native alarm screen triggered successfully with ringtone: ${alarm.soundPath}');
-      
+
+      debugPrint(
+        'Native alarm screen triggered successfully with ringtone: ${alarm.soundPath}',
+      );
     } catch (e) {
       debugPrint('Error triggering native alarm screen: $e');
       // Fallback: still notify the stream
       _alarmController?.add(alarmId);
+    }
+  }
+
+  /// Test notification functionality
+  Future<void> testNotification() async {
+    try {
+      await _channel.invokeMethod('testNotification');
+      debugPrint('Test notification sent');
+    } catch (e) {
+      debugPrint('Error sending test notification: $e');
+    }
+  }
+
+  /// Check notification permission status
+  Future<Map<String, bool>> checkNotificationPermission() async {
+    try {
+      final Map<dynamic, dynamic> result = await _channel.invokeMethod(
+        'checkNotificationPermission',
+      );
+      return {
+        'hasPermission': result['hasPermission'] as bool? ?? false,
+        'areEnabled': result['areEnabled'] as bool? ?? false,
+      };
+    } catch (e) {
+      debugPrint('Error checking notification permission: $e');
+      return {'hasPermission': false, 'areEnabled': false};
     }
   }
 
@@ -114,7 +146,7 @@ class AndroidAlarmService {
         'vibrate': alarm.vibrate,
         'weekDays': alarm.weekDays,
       });
-      
+
       debugPrint('Android alarm scheduled: ${alarm.id} at $scheduledTime');
     } catch (e) {
       debugPrint('Error scheduling Android alarm: $e');

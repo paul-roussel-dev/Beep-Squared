@@ -3,6 +3,10 @@ package com.example.beep_squared
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -31,6 +35,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.core.app.NotificationCompat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,6 +48,10 @@ class AlarmOverlayService : Service() {
     private var pulseAnimator: ValueAnimator? = null
     
     companion object {
+        private const val SNOOZE_DURATION_MINUTES = 5
+        private const val SNOOZE_NOTIFICATION_CHANNEL_ID = "snooze_notification_channel"
+        private const val SNOOZE_NOTIFICATION_ID = 1001
+        
         fun showAlarmOverlay(context: Context, alarmId: String, label: String, soundPath: String = "default") {
             val intent = Intent(context, AlarmOverlayService::class.java).apply {
                 putExtra("alarmId", alarmId)
@@ -50,6 +59,48 @@ class AlarmOverlayService : Service() {
                 putExtra("soundPath", soundPath)
             }
             context.startService(intent)
+        }
+        
+        /**
+         * Test method to show a simple notification for debugging
+         */
+        fun testNotification(context: Context) {
+            try {
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                
+                // Create test channel
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val testChannel = NotificationChannel(
+                        "test_channel",
+                        "Test Notifications",
+                        NotificationManager.IMPORTANCE_HIGH
+                    )
+                    notificationManager.createNotificationChannel(testChannel)
+                }
+                
+                val notification = NotificationCompat.Builder(context, "test_channel")
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle("Test Notification")
+                    .setContentText("This is a test notification")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true)
+                    .build()
+                
+                notificationManager.notify(9999, notification)
+                Log.d("AlarmOverlayService", "Test notification posted")
+                
+            } catch (e: Exception) {
+                Log.e("AlarmOverlayService", "Error posting test notification", e)
+            }
+        }
+        fun cancelSnoozeNotification(context: Context, alarmId: String) {
+            try {
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.cancel(SNOOZE_NOTIFICATION_ID)
+                Log.d("AlarmOverlayService", "Cancelled snooze notification for alarm: $alarmId")
+            } catch (e: Exception) {
+                Log.e("AlarmOverlayService", "Error cancelling snooze notification for $alarmId", e)
+            }
         }
     }
     
@@ -64,6 +115,9 @@ class AlarmOverlayService : Service() {
         
         val alarmId = intent?.getStringExtra("alarmId") ?: "unknown"
         val label = intent?.getStringExtra("label") ?: "Alarm"
+        
+        // Create notification channel first to ensure it exists
+        createSnoozeNotificationChannel()
         
         startAlarmSound()
         showAlarmOverlay(alarmId, label)
@@ -177,7 +231,7 @@ class AlarmOverlayService : Service() {
                 addView(createAnimatedTimeDisplay())
                 
                 // Modern action buttons with slide gestures
-                addView(createModernActionButtons())
+                addView(createModernActionButtons(alarmId))
                 
                 // Slide to dismiss area
                 addView(createSlideToDismissArea())
@@ -307,7 +361,7 @@ class AlarmOverlayService : Service() {
         }
     }
     
-    private fun createModernActionButtons(): LinearLayout {
+    private fun createModernActionButtons(alarmId: String): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
@@ -315,7 +369,7 @@ class AlarmOverlayService : Service() {
             
             // Snooze button
             addView(createStyledButton("SNOOZE", false, Color.parseColor("#FF7043")) {
-                dismissAlarmWithAnimation()
+                snoozeAlarm(alarmId)
             })
             
             // Space
@@ -538,6 +592,147 @@ class AlarmOverlayService : Service() {
                 dismissAlarm()
             }
             ?.start()
+    }
+    
+    // Snooze functionality
+    private fun snoozeAlarm(alarmId: String) {
+        Log.d("AlarmOverlayService", "Snoozing alarm: $alarmId")
+        
+        // Calculate snooze time
+        val snoozeTime = Calendar.getInstance().apply {
+            add(Calendar.MINUTE, SNOOZE_DURATION_MINUTES)
+        }
+        
+        Log.d("AlarmOverlayService", "Snooze time calculated: ${snoozeTime.time}")
+        
+        // Show snooze notification
+        showSnoozeNotification(snoozeTime.time)
+        
+        // Schedule snooze alarm
+        scheduleSnoozeAlarm(alarmId, snoozeTime.timeInMillis)
+        
+        // Dismiss current alarm with animation
+        dismissAlarmWithAnimation()
+    }
+    
+    private fun showSnoozeNotification(snoozeTime: Date) {
+        try {
+            createSnoozeNotificationChannel()
+            
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val snoozeTimeString = timeFormat.format(snoozeTime)
+            
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            
+            // Check if notifications are enabled
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !notificationManager.areNotificationsEnabled()) {
+                Log.w("AlarmOverlayService", "Notifications are disabled by user")
+                return
+            }
+            
+            // Create notification with higher priority and better visibility
+            val notification = NotificationCompat.Builder(this, SNOOZE_NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentTitle("⏰ Alarm Snoozed")
+                .setContentText("Next alarm: $snoozeTimeString (in $SNOOZE_DURATION_MINUTES min)")
+                .setStyle(NotificationCompat.BigTextStyle()
+                    .bigText("Your alarm has been snoozed for $SNOOZE_DURATION_MINUTES minutes.\n\nNext alarm will ring at: $snoozeTimeString"))
+                .setPriority(NotificationCompat.PRIORITY_HIGH) // Changed to HIGH priority
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setAutoCancel(true)
+                .setOngoing(false) // Make it dismissible
+                .setShowWhen(true)
+                .setWhen(snoozeTime.time)
+                .setColor(Color.parseColor("#1565C0"))
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setDefaults(NotificationCompat.DEFAULT_LIGHTS) // Add lights
+                .setLights(Color.parseColor("#1565C0"), 1000, 1000) // Blue light blink
+                .build()
+            
+            notificationManager.notify(SNOOZE_NOTIFICATION_ID, notification)
+            
+            Log.d("AlarmOverlayService", "Snooze notification created and posted for: $snoozeTimeString")
+            Log.d("AlarmOverlayService", "Notification ID: $SNOOZE_NOTIFICATION_ID, Channel: $SNOOZE_NOTIFICATION_CHANNEL_ID")
+            
+        } catch (e: Exception) {
+            Log.e("AlarmOverlayService", "Error showing snooze notification", e)
+        }
+    }
+    
+    private fun createSnoozeNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            
+            // Check if channel already exists
+            val existingChannel = notificationManager.getNotificationChannel(SNOOZE_NOTIFICATION_CHANNEL_ID)
+            if (existingChannel != null) {
+                Log.d("AlarmOverlayService", "Notification channel already exists")
+                return
+            }
+            
+            val channel = NotificationChannel(
+                SNOOZE_NOTIFICATION_CHANNEL_ID,
+                "Snooze Notifications",
+                NotificationManager.IMPORTANCE_HIGH // Changed to HIGH importance
+            ).apply {
+                description = "Notifications shown when alarms are snoozed"
+                enableLights(true)
+                lightColor = Color.parseColor("#1565C0")
+                enableVibration(false) // No vibration for snooze notifications
+                setShowBadge(true)
+                lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+                
+                // Make sure the channel allows notifications
+                setBypassDnd(false)
+                canBypassDnd()
+            }
+            
+            notificationManager.createNotificationChannel(channel)
+            Log.d("AlarmOverlayService", "Snooze notification channel created with HIGH importance")
+        } else {
+            Log.d("AlarmOverlayService", "Android version < O, no channel needed")
+        }
+    }
+    
+    private fun scheduleSnoozeAlarm(alarmId: String, snoozeTimeMillis: Long) {
+        try {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            
+            // Create intent for snooze alarm
+            val snoozeIntent = Intent(this, AlarmReceiver::class.java).apply {
+                putExtra(AlarmConfig.EXTRA_ALARM_ID, "${alarmId}_snooze")
+                putExtra(AlarmConfig.EXTRA_LABEL, "Snoozed Alarm")
+                putExtra(AlarmConfig.EXTRA_SOUND_PATH, "default")
+                action = "SNOOZE_ALARM_TRIGGER"
+            }
+            
+            val pendingIntent = PendingIntent.getBroadcast(
+                this,
+                alarmId.hashCode() + 1000, // Unique ID for snooze
+                snoozeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // Schedule exact alarm for snooze
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    snoozeTimeMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    snoozeTimeMillis,
+                    pendingIntent
+                )
+            }
+            
+            Log.d("AlarmOverlayService", "Snooze alarm scheduled for: ${Date(snoozeTimeMillis)}")
+            
+        } catch (e: Exception) {
+            Log.e("AlarmOverlayService", "Error scheduling snooze alarm: ${e.message}")
+        }
     }
     
     // Utility functions

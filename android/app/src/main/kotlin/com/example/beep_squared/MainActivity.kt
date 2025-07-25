@@ -1,13 +1,18 @@
 package com.example.beep_squared
 
+import android.Manifest
 import android.app.AlarmManager
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -15,10 +20,18 @@ import java.util.*
 
 class MainActivity : FlutterActivity() {
     private lateinit var alarmManager: AlarmManager
+    
+    companion object {
+        private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
+        private const val OVERLAY_PERMISSION_REQUEST_CODE = 1234
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        
+        // Check and request notification permission for Android 13+
+        requestNotificationPermission()
         
         // Check and request exact alarm permission
         if (!AlarmPermissionHelper.checkExactAlarmPermission(this)) {
@@ -97,6 +110,30 @@ class MainActivity : FlutterActivity() {
                         }
                         result.success(true)
                     }
+                    "testNotification" -> {
+                        // Test method to check if notifications work
+                        AlarmOverlayService.testNotification(this)
+                        result.success(true)
+                    }
+                    "checkNotificationPermission" -> {
+                        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                        } else {
+                            true // No permission needed for older versions
+                        }
+                        
+                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                        val areEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            notificationManager.areNotificationsEnabled()
+                        } else {
+                            true
+                        }
+                        
+                        result.success(mapOf(
+                            "hasPermission" to hasPermission,
+                            "areEnabled" to areEnabled
+                        ))
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -173,6 +210,43 @@ class MainActivity : FlutterActivity() {
             }
         }
     }
+    
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+                != PackageManager.PERMISSION_GRANTED) {
+                
+                android.util.Log.d("MainActivity", "Requesting notification permission for Android 13+")
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    NOTIFICATION_PERMISSION_REQUEST_CODE
+                )
+            } else {
+                android.util.Log.d("MainActivity", "Notification permission already granted")
+            }
+        } else {
+            android.util.Log.d("MainActivity", "Android version < 13, no notification permission needed")
+        }
+    }
+    
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        when (requestCode) {
+            NOTIFICATION_PERMISSION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    android.util.Log.d("MainActivity", "Notification permission granted")
+                } else {
+                    android.util.Log.w("MainActivity", "Notification permission denied")
+                }
+            }
+        }
+    }
 
     private fun triggerFlutterAlarm(alarmId: String) {
         if (flutterEngine != null) {
@@ -195,9 +269,5 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error triggering modern alarm: ${e.message}", e)
         }
-    }
-
-    companion object {
-        private const val OVERLAY_PERMISSION_REQUEST_CODE = 1234
     }
 }
