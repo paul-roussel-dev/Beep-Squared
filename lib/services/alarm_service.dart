@@ -5,15 +5,15 @@ import '../models/alarm.dart';
 import '../utils/constants.dart';
 
 /// Service for managing alarms with persistent storage
-/// 
+///
 /// This service handles CRUD operations for alarms and provides
 /// a centralized way to manage alarm data across the application.
 class AlarmService {
   static AlarmService? _instance;
-  
+
   /// Private constructor to prevent direct instantiation
   AlarmService._();
-  
+
   /// Singleton instance accessor
   static AlarmService get instance {
     _instance ??= AlarmService._();
@@ -25,9 +25,9 @@ class AlarmService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? alarmsJson = prefs.getString(AppConstants.alarmsStorageKey);
-      
+
       if (alarmsJson == null) return [];
-      
+
       final List<dynamic> alarmsList = json.decode(alarmsJson);
       return alarmsList.map((alarmJson) => Alarm.fromJson(alarmJson)).toList();
     } catch (e) {
@@ -61,12 +61,12 @@ class AlarmService {
   Future<bool> updateAlarm(Alarm updatedAlarm) async {
     final alarms = await getAlarms();
     final index = alarms.indexWhere((alarm) => alarm.id == updatedAlarm.id);
-    
+
     if (index != -1) {
       alarms[index] = updatedAlarm;
       return await saveAlarms(alarms);
     }
-    
+
     return false;
   }
 
@@ -81,14 +81,14 @@ class AlarmService {
   Future<bool> toggleAlarm(String alarmId) async {
     final alarms = await getAlarms();
     final index = alarms.indexWhere((alarm) => alarm.id == alarmId);
-    
+
     if (index != -1) {
       alarms[index] = alarms[index].copyWith(
         isEnabled: !alarms[index].isEnabled,
       );
       return await saveAlarms(alarms);
     }
-    
+
     return false;
   }
 
@@ -100,6 +100,34 @@ class AlarmService {
     } catch (e) {
       debugPrint('Error clearing alarms: $e');
       return false;
+    }
+  }
+
+  /// Clean up expired one-time alarms
+  Future<void> cleanupExpiredAlarms() async {
+    final alarms = await getAlarms();
+    final now = DateTime.now();
+    bool hasExpiredAlarms = false;
+
+    final validAlarms = alarms.where((alarm) {
+      // Keep recurring alarms (with weekdays)
+      if (alarm.weekDays.isNotEmpty) return true;
+
+      // For one-time alarms, check if they're in the past
+      if (alarm.time.isBefore(now)) {
+        debugPrint(
+          'Removing expired one-time alarm: ${alarm.label} at ${alarm.time}',
+        );
+        hasExpiredAlarms = true;
+        return false;
+      }
+
+      return true;
+    }).toList();
+
+    if (hasExpiredAlarms) {
+      await saveAlarms(validAlarms);
+      debugPrint('Cleaned up expired one-time alarms');
     }
   }
 }

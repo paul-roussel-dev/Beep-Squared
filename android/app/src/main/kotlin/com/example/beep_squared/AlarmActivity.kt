@@ -4,6 +4,7 @@ import android.app.KeyguardManager
 import android.app.NotificationManager
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
@@ -13,6 +14,7 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -128,67 +130,161 @@ class AlarmActivity : ComponentActivity() {
     }
     
     private fun createAlarmView(label: String): View {
-        Log.d("AlarmActivity", "=== CREATING ALARM VIEW UI ===")
+        Log.d("AlarmActivity", "=== CREATING MODERN ALARM VIEW UI ===")
         Log.d("AlarmActivity", "Label: $label")
         
         return LinearLayout(this).apply {
             Log.d("AlarmActivity", "Creating LinearLayout...")
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.RED)
+            
+            // Create modern blue gradient background
+            val gradientDrawable = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    Color.parseColor("#283593"), // Dark blue
+                    Color.parseColor("#3F51B5"), // Indigo
+                    Color.parseColor("#1A237E")  // Very dark blue
+                )
+            )
+            background = gradientDrawable
+            
             gravity = Gravity.CENTER
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            setPadding(dpToPx(32), dpToPx(64), dpToPx(32), dpToPx(64))
             
-            Log.d("AlarmActivity", "Adding title TextView...")
-            // Title
+            Log.d("AlarmActivity", "Adding alarm icon and title...")
+            // Modern alarm icon with larger size
             addView(TextView(this@AlarmActivity).apply {
-                text = "🔔 ALARM"
-                textSize = 32f
+                text = "⏰"
+                textSize = 80f
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
+                setPadding(0, 0, 0, dpToPx(24))
             })
             
-            Log.d("AlarmActivity", "Adding label TextView...")
-            // Label
+            // Main title with modern typography
+            addView(TextView(this@AlarmActivity).apply {
+                text = "ALARM"
+                textSize = 36f
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                letterSpacing = 0.1f
+                setPadding(0, 0, 0, dpToPx(16))
+            })
+            
+            Log.d("AlarmActivity", "Adding alarm label...")
+            // Alarm label with modern styling
             addView(TextView(this@AlarmActivity).apply {
                 text = label
-                textSize = 24f
-                setTextColor(Color.WHITE)
+                textSize = 20f
+                setTextColor(Color.parseColor("#E8EAF6")) // Light gray from theme
                 gravity = Gravity.CENTER
-                setPadding(0, 32, 0, 64)
+                setPadding(dpToPx(16), 0, dpToPx(16), dpToPx(48))
+                alpha = 0.9f
             })
             
-            Log.d("AlarmActivity", "Adding dismiss button...")
-            // Dismiss button
-            addView(Button(this@AlarmActivity).apply {
-                text = "DISMISS"
-                textSize = 20f
-                setOnClickListener {
+            Log.d("AlarmActivity", "Adding action buttons...")
+            // Buttons container
+            addView(LinearLayout(this@AlarmActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                
+                // Snooze button (modern style)
+                addView(createModernButton("SNOOZE", false) {
+                    Log.d("AlarmActivity", "Alarm snoozed by user")
+                    // TODO: Implement snooze logic
+                    finish()
+                })
+                
+                // Space between buttons
+                addView(View(this@AlarmActivity).apply {
+                    layoutParams = LinearLayout.LayoutParams(dpToPx(24), 0)
+                })
+                
+                // Dismiss button (primary style)
+                addView(createModernButton("DISMISS", true) {
                     Log.d("AlarmActivity", "Alarm dismissed by user")
                     finish()
-                }
-                layoutParams = LinearLayout.LayoutParams(400, 120).apply {
-                    gravity = Gravity.CENTER
-                }
+                })
             })
             
-            Log.d("AlarmActivity", "=== ALARM VIEW UI COMPLETED ===")
+            Log.d("AlarmActivity", "=== MODERN ALARM VIEW UI COMPLETED ===")
         }
+    }
+    
+    private fun createModernButton(text: String, isPrimary: Boolean, onClick: () -> Unit): Button {
+        return Button(this).apply {
+            this.text = text
+            textSize = 16f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            
+            if (isPrimary) {
+                // Primary button (white background, blue text)
+                setTextColor(Color.parseColor("#1565C0"))
+                background = createButtonBackground(Color.WHITE, Color.parseColor("#E3F2FD"))
+            } else {
+                // Secondary button (transparent background, white text)
+                setTextColor(Color.WHITE)
+                background = createButtonBackground(Color.TRANSPARENT, Color.parseColor("#5C6BC0"))
+            }
+            
+            layoutParams = LinearLayout.LayoutParams(dpToPx(120), dpToPx(56)).apply {
+                gravity = Gravity.CENTER
+            }
+            
+            setOnClickListener { onClick() }
+            
+            // Add elevation effect
+            elevation = dpToPx(4).toFloat()
+            stateListAnimator = null
+        }
+    }
+    
+    private fun createButtonBackground(backgroundColor: Int, pressedColor: Int): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(backgroundColor)
+            cornerRadius = dpToPx(12).toFloat()
+            setStroke(if (backgroundColor == Color.TRANSPARENT) dpToPx(2) else 0, Color.WHITE)
+        }
+    }
+    
+    private fun dpToPx(dp: Int): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp.toFloat(),
+            resources.displayMetrics
+        ).toInt()
     }
     
     private fun createMinimalView(): View {
         return TextView(this).apply {
-            text = "ALARM - TAP TO DISMISS"
-            textSize = 24f
+            text = "⏰ ALARM - TAP TO DISMISS"
+            textSize = 28f
             setTextColor(Color.WHITE)
-            setBackgroundColor(Color.RED)
+            
+            // Apply blue gradient background even for minimal view
+            val gradientDrawable = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    Color.parseColor("#283593"),
+                    Color.parseColor("#3F51B5")
+                )
+            )
+            background = gradientDrawable
+            
             gravity = Gravity.CENTER
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            setPadding(dpToPx(32), dpToPx(32), dpToPx(32), dpToPx(32))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            
             setOnClickListener {
                 Log.d("AlarmActivity", "Minimal alarm dismissed")
                 finish()

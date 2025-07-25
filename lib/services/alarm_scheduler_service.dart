@@ -9,22 +9,23 @@ import 'alarm_manager_service.dart';
 import 'android_alarm_service.dart';
 
 /// Service for scheduling and managing alarm notifications
-/// 
+///
 /// This service handles scheduling alarms using the system's notification
 /// system and manages alarm triggers when they go off.
 class AlarmSchedulerService {
   static AlarmSchedulerService? _instance;
-  
+
   /// Private constructor to prevent direct instantiation
   AlarmSchedulerService._();
-  
+
   /// Singleton instance accessor
   static AlarmSchedulerService get instance {
     _instance ??= AlarmSchedulerService._();
     return _instance!;
   }
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
   /// Initialize the notification service
@@ -35,14 +36,16 @@ class AlarmSchedulerService {
     tz.initializeTimeZones();
 
     // Android initialization
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
     // iOS initialization
-    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
     const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
@@ -52,7 +55,8 @@ class AlarmSchedulerService {
     await _notifications.initialize(
       settings,
       onDidReceiveNotificationResponse: _onNotificationResponse,
-      onDidReceiveBackgroundNotificationResponse: _onBackgroundNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          _onBackgroundNotificationResponse,
     );
 
     // Create the alarm notification channel
@@ -74,7 +78,9 @@ class AlarmSchedulerService {
     );
 
     await _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 
@@ -83,7 +89,7 @@ class AlarmSchedulerService {
     if (response.payload != null) {
       final Map<String, dynamic> data = json.decode(response.payload!);
       final String alarmId = data['alarmId'] as String;
-      
+
       // Trigger alarm screen
       _triggerAlarmScreen(alarmId);
     }
@@ -95,11 +101,13 @@ class AlarmSchedulerService {
     if (response.payload != null) {
       final Map<String, dynamic> data = json.decode(response.payload!);
       final String alarmId = data['alarmId'] as String;
-      
+
       // Trigger alarm screen from background
-      AlarmManagerService.instance.triggerAlarmFromBackground(alarmId).catchError((error) {
-        debugPrint('Error triggering alarm from background: $error');
-      });
+      AlarmManagerService.instance
+          .triggerAlarmFromBackground(alarmId)
+          .catchError((error) {
+            debugPrint('Error triggering alarm from background: $error');
+          });
     }
   }
 
@@ -109,11 +117,13 @@ class AlarmSchedulerService {
     if (response.payload != null) {
       final Map<String, dynamic> data = json.decode(response.payload!);
       final String alarmId = data['alarmId'] as String;
-      
+
       // Automatically trigger alarm screen when notification is displayed
-      AlarmManagerService.instance.triggerAlarmFromBackground(alarmId).catchError((error) {
-        debugPrint('Error triggering alarm on display: $error');
-      });
+      AlarmManagerService.instance
+          .triggerAlarmFromBackground(alarmId)
+          .catchError((error) {
+            debugPrint('Error triggering alarm on display: $error');
+          });
     }
   }
 
@@ -130,56 +140,73 @@ class AlarmSchedulerService {
     if (!_isInitialized) await initialize();
 
     final int notificationId = alarm.id.hashCode;
-    
+    final now = DateTime.now();
+
+    // For one-time alarms, check if time has passed and skip scheduling
+    if (alarm.weekDays.isEmpty && alarm.time.isBefore(now)) {
+      debugPrint('Skipping one-time alarm in the past: ${alarm.time} vs $now');
+      // Optionally disable the alarm
+      final alarmService = AlarmService.instance;
+      final updatedAlarm = alarm.copyWith(isEnabled: false);
+      await alarmService.updateAlarm(updatedAlarm);
+      debugPrint('One-time alarm disabled: ${alarm.id}');
+      return;
+    }
+
     // Calculate next alarm time
     final DateTime nextAlarmTime = _getNextAlarmTime(alarm);
-    
+
     // Use Android native alarm for better reliability
     try {
       await AndroidAlarmService.instance.scheduleAlarm(alarm, nextAlarmTime);
-      debugPrint('Native Android alarm scheduled: ${alarm.id} at $nextAlarmTime');
+      debugPrint(
+        'Native Android alarm scheduled: ${alarm.id} at $nextAlarmTime',
+      );
       return;
     } catch (e) {
       debugPrint('Error scheduling Android alarm: $e');
-      debugPrint('Failed to schedule native alarm, falling back to notification: $e');
+      debugPrint(
+        'Failed to schedule native alarm, falling back to notification: $e',
+      );
       // Continue with notification fallback only if native completely fails
     }
-    
+
     // Fallback to notification-based alarm
     // Create notification details with immediate trigger
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'alarm_channel',
-      'Alarms',
-      channelDescription: 'Alarm notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      category: AndroidNotificationCategory.alarm,
-      fullScreenIntent: true,
-      showWhen: true,
-      when: nextAlarmTime.millisecondsSinceEpoch,
-      // Use default notification sound
-      playSound: true,
-      enableVibration: alarm.vibrate,
-      ongoing: true,
-      autoCancel: false,
-      // Critical notification that shows immediately
-      visibility: NotificationVisibility.public,
-      channelShowBadge: true,
-      onlyAlertOnce: false,
-      // Add wake lock and screen on
-      actions: [
-        const AndroidNotificationAction(
-          'dismiss',
-          'Dismiss',
-          cancelNotification: true,
-        ),
-        const AndroidNotificationAction(
-          'snooze',
-          'Snooze',
-          cancelNotification: false,
-        ),
-      ],
-    );
+    final AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'alarm_channel',
+          'Alarms',
+          channelDescription: 'Alarm notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.alarm,
+          fullScreenIntent: true,
+          showWhen: true,
+          when: nextAlarmTime.millisecondsSinceEpoch,
+          // Use default notification sound
+          playSound: true,
+          enableVibration: alarm.vibrate,
+          ongoing: true,
+          autoCancel: false,
+          // Critical notification that shows immediately
+          visibility: NotificationVisibility.public,
+          channelShowBadge: true,
+          onlyAlertOnce: false,
+          // Add wake lock and screen on
+          actions: [
+            const AndroidNotificationAction(
+              'dismiss',
+              'Dismiss',
+              cancelNotification: true,
+            ),
+            const AndroidNotificationAction(
+              'snooze',
+              'Snooze',
+              cancelNotification: false,
+            ),
+          ],
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -201,7 +228,8 @@ class AlarmSchedulerService {
       _convertToTZDateTime(nextAlarmTime),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: json.encode({
         'alarmId': alarm.id,
         'alarmLabel': alarm.label,
@@ -219,24 +247,25 @@ class AlarmSchedulerService {
     if (!_isInitialized) await initialize();
 
     final int notificationId = alarm.id.hashCode;
-    
+
     // Create notification details
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'alarm_channel',
-      'Alarms',
-      channelDescription: 'Alarm notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      category: AndroidNotificationCategory.alarm,
-      fullScreenIntent: true,
-      showWhen: true,
-      when: snoozeTime.millisecondsSinceEpoch,
-      // Use default notification sound
-      playSound: true,
-      enableVibration: alarm.vibrate,
-      ongoing: true,
-      autoCancel: false,
-    );
+    final AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'alarm_channel',
+          'Alarms',
+          channelDescription: 'Alarm notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.alarm,
+          fullScreenIntent: true,
+          showWhen: true,
+          when: snoozeTime.millisecondsSinceEpoch,
+          // Use default notification sound
+          playSound: true,
+          enableVibration: alarm.vibrate,
+          ongoing: true,
+          autoCancel: false,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -258,7 +287,8 @@ class AlarmSchedulerService {
       _convertToTZDateTime(snoozeTime),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: json.encode({
         'alarmId': alarm.id,
         'alarmLabel': alarm.label,
@@ -286,16 +316,27 @@ class AlarmSchedulerService {
   /// Get next alarm time based on alarm configuration
   DateTime _getNextAlarmTime(Alarm alarm) {
     final now = DateTime.now();
-    
+
     // For one-time alarms (no weekdays specified), use the exact time
     if (alarm.weekDays.isEmpty) {
-      // If it's a one-time alarm and the time has passed, it should not be rescheduled
+      // If it's a one-time alarm and the time has passed, return a future time
+      // This should not happen as we now check this in scheduleAlarm, but safety first
       if (alarm.time.isBefore(now)) {
-        debugPrint('One-time alarm time has passed: ${alarm.time} vs $now');
+        debugPrint(
+          'Warning: One-time alarm time has passed: ${alarm.time} vs $now',
+        );
+        // Return tomorrow at the same time as fallback
+        return DateTime(
+          now.year,
+          now.month,
+          now.day + 1,
+          alarm.time.hour,
+          alarm.time.minute,
+        );
       }
       return alarm.time;
     }
-    
+
     // For recurring alarms, find next occurrence
     DateTime alarmTime = DateTime(
       now.year,
@@ -326,11 +367,14 @@ class AlarmSchedulerService {
 
   /// Reschedule all active alarms
   Future<void> rescheduleAllAlarms() async {
+    // First, clean up expired one-time alarms
+    await AlarmService.instance.cleanupExpiredAlarms();
+
     final alarms = await AlarmService.instance.getAlarms();
-    
+
     // Cancel all existing notifications
     await cancelAllAlarms();
-    
+
     // Reschedule active alarms
     for (final alarm in alarms) {
       if (alarm.isEnabled) {
@@ -342,7 +386,7 @@ class AlarmSchedulerService {
   /// Request notification permissions
   Future<bool> requestPermissions() async {
     if (!_isInitialized) await initialize();
-    
+
     // For now, return true - permissions will be handled by the system
     // In a real implementation, you'd use the appropriate permission package
     return true;
@@ -353,26 +397,27 @@ class AlarmSchedulerService {
     if (!_isInitialized) await initialize();
 
     final int notificationId = alarmId.hashCode;
-    
+
     // Create immediate notification
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'alarm_channel',
-      'Alarms',
-      channelDescription: 'Alarm notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      category: AndroidNotificationCategory.alarm,
-      fullScreenIntent: true,
-      showWhen: true,
-      when: DateTime.now().millisecondsSinceEpoch,
-      playSound: true,
-      enableVibration: true,
-      ongoing: true,
-      autoCancel: false,
-      visibility: NotificationVisibility.public,
-      channelShowBadge: true,
-      onlyAlertOnce: false,
-    );
+    final AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'alarm_channel',
+          'Alarms',
+          channelDescription: 'Alarm notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.alarm,
+          fullScreenIntent: true,
+          showWhen: true,
+          when: DateTime.now().millisecondsSinceEpoch,
+          playSound: true,
+          enableVibration: true,
+          ongoing: true,
+          autoCancel: false,
+          visibility: NotificationVisibility.public,
+          channelShowBadge: true,
+          onlyAlertOnce: false,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
