@@ -7,6 +7,20 @@
 			"command": "flutter clean; flutter pub get; flutter build apk --debug",
 			"group": "build",
 			"isBackground": false
+		},
+		{
+			"label": "Flutter Hot Reload",
+			"type": "shell",
+			"command": "flutter run --hot",
+			"group": "build",
+			"isBackground": true
+		},
+		{
+			"label": "Flutter Analyze",
+			"type": "shell",
+			"command": "flutter analyze",
+			"group": "test",
+			"isBackground": false
 		}
 	]
 }

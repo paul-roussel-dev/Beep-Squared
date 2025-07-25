@@ -4,7 +4,7 @@ import '../models/alarm.dart';
 import '../services/audio_preview_service.dart';
 
 /// Screen displayed when an alarm is triggered
-/// 
+///
 /// This screen appears over the lock screen and provides options to
 /// dismiss or snooze the alarm. It includes a slide-to-dismiss gesture
 /// and plays the alarm sound in a loop.
@@ -29,9 +29,8 @@ class _AlarmScreenState extends State<AlarmScreen>
   late AnimationController _pulseController;
   late AnimationController _slideController;
   late Animation<double> _pulseAnimation;
-  
+
   final AudioPreviewService _audioService = AudioPreviewService.instance;
-  double _dismissThreshold = 0.0;
 
   @override
   void initState() {
@@ -47,13 +46,9 @@ class _AlarmScreenState extends State<AlarmScreen>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Slide animation for dismiss gesture
     _slideController = AnimationController(
@@ -80,7 +75,10 @@ class _AlarmScreenState extends State<AlarmScreen>
   }
 
   void _restoreScreenTimeout() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
   }
 
   @override
@@ -107,39 +105,43 @@ class _AlarmScreenState extends State<AlarmScreen>
     return WillPopScope(
       onWillPop: () async => false, // Prevent back navigation
       child: Scaffold(
-        backgroundColor: Colors.black87,
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
         body: Container(
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [
-                Colors.indigo.shade900,
+                const Color(0xFF1A237E).withOpacity(0.95),
+                const Color(0xFF3F51B5).withOpacity(0.9),
+                const Color(0xFF5C6BC0).withOpacity(0.85),
                 Colors.black87,
               ],
+              stops: const [0.0, 0.3, 0.7, 1.0],
             ),
           ),
           child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Time display
-                _buildTimeDisplay(),
-                
-                // Alarm info
-                _buildAlarmInfo(),
-                
-                // Pulsing alarm icon
-                _buildAlarmIcon(),
-                
-                // Dismiss slider
-                _buildDismissSlider(),
-                
-                // Snooze button
-                _buildSnoozeButton(),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Time display
+                  _buildTimeDisplay(),
+
+                  // Alarm info
+                  _buildAlarmInfo(),
+
+                  // Pulsing alarm icon
+                  _buildAlarmIcon(),
+
+                  // Action buttons
+                  _buildActionButtons(),
+                ],
+              ),
             ),
           ),
         ),
@@ -149,23 +151,38 @@ class _AlarmScreenState extends State<AlarmScreen>
 
   Widget _buildTimeDisplay() {
     final now = DateTime.now();
-    final timeString = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    
+    final timeString =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     return Column(
       children: [
-        Text(
-          timeString,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 64,
-            fontWeight: FontWeight.w300,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
           ),
-        ),
-        Text(
-          _formatDate(now),
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
-            fontSize: 18,
+          child: Column(
+            children: [
+              Text(
+                timeString,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 72,
+                  fontWeight: FontWeight.w300,
+                  letterSpacing: 2,
+                ),
+              ),
+              Text(
+                _formatDate(now),
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -174,34 +191,48 @@ class _AlarmScreenState extends State<AlarmScreen>
 
   Widget _buildAlarmInfo() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.alarm,
-            color: Colors.white,
-            size: 32,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.alarm, color: Colors.white, size: 32),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             widget.alarm.label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             'Scheduled for ${widget.alarm.formattedTime}',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withOpacity(0.85),
               fontSize: 16,
+              fontWeight: FontWeight.w400,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -215,154 +246,130 @@ class _AlarmScreenState extends State<AlarmScreen>
         return Transform.scale(
           scale: _pulseAnimation.value,
           child: Container(
-            width: 120,
-            height: 120,
+            width: 160,
+            height: 160,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.red.withOpacity(0.8),
+              gradient: RadialGradient(
+                colors: [
+                  Colors.red.withOpacity(0.9),
+                  Colors.red.withOpacity(0.7),
+                  Colors.red.withOpacity(0.4),
+                ],
+                stops: const [0.3, 0.7, 1.0],
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.red.withOpacity(0.4),
-                  blurRadius: 20,
-                  spreadRadius: 5,
+                  color: Colors.red.withOpacity(0.6),
+                  blurRadius: 30,
+                  spreadRadius: 10,
+                ),
+                BoxShadow(
+                  color: Colors.red.withOpacity(0.3),
+                  blurRadius: 60,
+                  spreadRadius: 20,
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.alarm,
-              color: Colors.white,
-              size: 60,
-            ),
+            child: const Icon(Icons.alarm, color: Colors.white, size: 80),
           ),
         );
       },
     );
   }
 
-  Widget _buildDismissSlider() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const Text(
-            'Slide to dismiss',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        // Dismiss button
+        Container(
+          width: double.infinity,
+          height: 70,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          child: ElevatedButton(
+            onPressed: _handleDismiss,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.withOpacity(0.9),
+              foregroundColor: Colors.white,
+              elevation: 8,
+              shadowColor: Colors.green.withOpacity(0.4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(35),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onPanUpdate: (details) {
-              setState(() {
-                _dismissThreshold = (details.localPosition.dx / context.size!.width).clamp(0.0, 1.0);
-              });
-            },
-            onPanEnd: (details) {
-              if (_dismissThreshold > 0.7) {
-                _handleDismiss();
-              } else {
-                setState(() {
-                  _dismissThreshold = 0.0;
-                });
-              }
-            },
-            child: Container(
-              width: double.infinity,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.4),
-                  width: 2,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check, size: 28),
+                SizedBox(width: 12),
+                Text(
+                  'Dismiss',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  // Progress indicator
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    width: (MediaQuery.of(context).size.width - 48) * _dismissThreshold,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  // Slider thumb
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 100),
-                    left: (MediaQuery.of(context).size.width - 48 - 52) * _dismissThreshold,
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      width: 52,
-                      height: 52,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _dismissThreshold > 0.7 ? Icons.check : Icons.keyboard_arrow_right,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  // Center text
-                  if (_dismissThreshold < 0.3)
-                    const Center(
-                      child: Text(
-                        'Dismiss Alarm',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSnoozeButton() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      child: ElevatedButton(
-        onPressed: _handleSnooze,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
+        ),
+        const SizedBox(height: 16),
+        // Snooze button
+        Container(
+          width: double.infinity,
+          height: 60,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          child: OutlinedButton(
+            onPressed: _handleSnooze,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white.withOpacity(0.7), width: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.snooze, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Snooze ${widget.alarm.snoozeMinutes} min',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.snooze),
-            const SizedBox(width: 8),
-            Text('Snooze ${widget.alarm.snoozeMinutes} min'),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
   String _formatDate(DateTime date) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     const days = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
-    
+
     return '${days[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
   }
 }
