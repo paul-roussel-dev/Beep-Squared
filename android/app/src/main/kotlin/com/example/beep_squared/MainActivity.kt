@@ -62,7 +62,7 @@ class MainActivity : FlutterActivity() {
                 val label = intent.getStringExtra(AlarmConfig.EXTRA_LABEL) ?: "Snooze Alarm"
                 val soundPath = intent.getStringExtra(AlarmConfig.EXTRA_SOUND_PATH) ?: AlarmConfig.DEFAULT_SOUND_PATH
                 if (alarmId != null && scheduledTime > 0) {
-                    scheduleAlarm(alarmId, scheduledTime, label, soundPath)
+                    scheduleAlarm(alarmId, scheduledTime, label, soundPath, "simple", "easy", "mixed")
                 }
             }
             else -> {
@@ -85,8 +85,11 @@ class MainActivity : FlutterActivity() {
                         val scheduledTime = call.argument<Long>(AlarmConfig.EXTRA_SCHEDULED_TIME)!!
                         val label = call.argument<String>(AlarmConfig.EXTRA_LABEL) ?: "Alarm"
                         val soundPath = call.argument<String>(AlarmConfig.EXTRA_SOUND_PATH) ?: AlarmConfig.DEFAULT_SOUND_PATH
+                        val unlockMethod = call.argument<String>("unlockMethod") ?: "simple"
+                        val mathDifficulty = call.argument<String>("mathDifficulty") ?: "easy"
+                        val mathOperations = call.argument<String>("mathOperations") ?: "mixed"
                         
-                        scheduleAlarm(alarmId, scheduledTime, label, soundPath)
+                        scheduleAlarm(alarmId, scheduledTime, label, soundPath, unlockMethod, mathDifficulty, mathOperations)
                         result.success(true)
                     }
                     "cancelAlarm" -> {
@@ -102,17 +105,13 @@ class MainActivity : FlutterActivity() {
                         val alarmId = call.argument<String>(AlarmConfig.EXTRA_ALARM_ID) ?: "flutter_alarm"
                         val label = call.argument<String>(AlarmConfig.EXTRA_LABEL) ?: "Alarm"
                         val ringtone = call.argument<String>("ringtone") ?: AlarmConfig.DEFAULT_SOUND_PATH
+                        val unlockMethod = call.argument<String>("unlockMethod") ?: "simple"
                         val immediate = call.argument<Boolean>("immediate") ?: false
                         
                         if (immediate) {
                             // Trigger alarm immediately using the modern overlay with configured sound
-                            triggerImmediateAlarm(alarmId, label, ringtone)
+                            triggerImmediateAlarm(alarmId, label, ringtone, unlockMethod)
                         }
-                        result.success(true)
-                    }
-                    "testNotification" -> {
-                        // Test method to check if notifications work
-                        AlarmOverlayService.testNotification(this)
                         result.success(true)
                     }
                     "checkNotificationPermission" -> {
@@ -139,7 +138,7 @@ class MainActivity : FlutterActivity() {
             }
     }
 
-    private fun scheduleAlarm(alarmId: String, scheduledTime: Long, label: String, soundPath: String) {
+    private fun scheduleAlarm(alarmId: String, scheduledTime: Long, label: String, soundPath: String, unlockMethod: String = "simple", mathDifficulty: String = "easy", mathOperations: String = "mixed") {
         try {
             // Check permission before scheduling
             if (!AlarmPermissionHelper.checkExactAlarmPermission(this)) {
@@ -152,6 +151,9 @@ class MainActivity : FlutterActivity() {
                 putExtra("alarmId", alarmId)
                 putExtra("label", label)
                 putExtra("soundPath", soundPath) // Passer le son configuré
+                putExtra("unlockMethod", unlockMethod) // Passer la méthode de déverrouillage
+                putExtra("mathDifficulty", mathDifficulty) // Passer la difficulté
+                putExtra("mathOperations", mathOperations) // Passer les opérations
             }
             
             val pendingIntent = PendingIntent.getBroadcast(
@@ -255,14 +257,14 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun triggerImmediateAlarm(alarmId: String, label: String, ringtone: String) {
+    private fun triggerImmediateAlarm(alarmId: String, label: String, ringtone: String, unlockMethod: String = "simple") {
         android.util.Log.d("MainActivity", "=== TRIGGERING MODERN ALARM OVERLAY ===")
-        android.util.Log.d("MainActivity", "AlarmId: $alarmId, Label: $label, Ringtone: $ringtone")
+        android.util.Log.d("MainActivity", "AlarmId: $alarmId, Label: $label, Ringtone: $ringtone, UnlockMethod: $unlockMethod")
         
         try {
             // Use ONLY the modern alarm overlay for consistency with configured sound
             android.util.Log.d("MainActivity", "Starting modern alarm overlay with configured sound...")
-            AlarmOverlayService.showAlarmOverlay(this, alarmId, label, ringtone)
+            AlarmOverlayService.showAlarmOverlay(this, alarmId, label, ringtone, unlockMethod)
             
             android.util.Log.d("MainActivity", "=== MODERN ALARM OVERLAY TRIGGERED ===")
             

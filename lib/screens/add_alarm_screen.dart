@@ -22,6 +22,9 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   bool _vibrate = true;
   int _snoozeMinutes = AppConstants.defaultSnoozeMinutes;
   String _selectedSoundPath = '';
+  AlarmUnlockMethod _unlockMethod = AlarmUnlockMethod.simple;
+  MathDifficulty _mathDifficulty = MathDifficulty.easy;
+  MathOperations _mathOperations = MathOperations.mixed;
   List<Map<String, String>> _availableRingtones = [];
 
   final AudioPreviewService _audioPreviewService = AudioPreviewService.instance;
@@ -46,6 +49,9 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       _vibrate = alarm.vibrate;
       _snoozeMinutes = alarm.snoozeMinutes;
       _selectedSoundPath = alarm.soundPath;
+      _unlockMethod = alarm.unlockMethod;
+      _mathDifficulty = alarm.mathDifficulty;
+      _mathOperations = alarm.mathOperations;
     } else {
       // Initialize with default values
       _selectedTime = TimeOfDay.now();
@@ -120,6 +126,9 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           _vibrate != original.vibrate ||
           _snoozeMinutes != original.snoozeMinutes ||
           _selectedSoundPath != original.soundPath ||
+          _unlockMethod != original.unlockMethod ||
+          _mathDifficulty != original.mathDifficulty ||
+          _mathOperations != original.mathOperations ||
           _isEnabled != original.isEnabled;
     } else {
       // Check against default values for new alarm
@@ -127,7 +136,10 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           _selectedWeekDays.isNotEmpty ||
           !_vibrate ||
           _snoozeMinutes != AppConstants.defaultSnoozeMinutes ||
-          _selectedSoundPath.isNotEmpty;
+          _selectedSoundPath.isNotEmpty ||
+          _unlockMethod != AlarmUnlockMethod.simple ||
+          _mathDifficulty != MathDifficulty.easy ||
+          _mathOperations != MathOperations.mixed;
     }
   }
 
@@ -443,6 +455,32 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             trailing: const Icon(Icons.keyboard_arrow_right),
             onTap: _selectSnoozeTime,
           ),
+          const Divider(height: 1),
+          // Unlock Method Setting
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.lock_open,
+                color: Theme.of(context).colorScheme.onErrorContainer,
+                size: 20,
+              ),
+            ),
+            title: const Text('Unlock Method'),
+            subtitle: Text(
+              _unlockMethod.displayName,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            trailing: const Icon(Icons.keyboard_arrow_right),
+            onTap: _selectUnlockMethod,
+          ),
         ],
       ),
     );
@@ -639,6 +677,282 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
     );
   }
 
+  Future<void> _selectUnlockMethod() async {
+    final selectedMethod = await showDialog<AlarmUnlockMethod>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Méthode de Déverrouillage'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: AlarmUnlockMethod.values
+              .map(
+                (method) => ListTile(
+                  leading: Icon(
+                    _getUnlockMethodIcon(method),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(method.displayName),
+                  subtitle: Text(
+                    method.description,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  trailing: _unlockMethod == method
+                      ? Icon(
+                          Icons.check,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context, method);
+                  },
+                ),
+              )
+              .toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedMethod != null) {
+      setState(() {
+        _unlockMethod = selectedMethod;
+      });
+
+      // Si math est sélectionné, montrer les options de personnalisation
+      if (selectedMethod == AlarmUnlockMethod.math) {
+        await _configureMathSettings();
+      }
+    }
+  }
+
+  Future<void> _configureMathSettings() async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Configuration Calcul'),
+        content: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Difficulté avec boutons compacts
+                const Text(
+                  'Difficulté:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: MathDifficulty.values.map((difficulty) {
+                    final isSelected = _mathDifficulty == difficulty;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setDialogState(() {
+                              _mathDifficulty = difficulty;
+                            });
+                            setState(() {
+                              _mathDifficulty = difficulty;
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.surface,
+                            foregroundColor: isSelected
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          child: Text(
+                            difficulty.displayName,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Opérations avec boutons icônes
+                const Text(
+                  'Opérations:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Addition
+                    _buildOperationButton(
+                      context,
+                      setDialogState,
+                      MathOperations.additionOnly,
+                      '+',
+                      _mathOperations == MathOperations.additionOnly,
+                    ),
+                    // Soustraction
+                    _buildOperationButton(
+                      context,
+                      setDialogState,
+                      MathOperations.subtractionOnly,
+                      '−',
+                      _mathOperations == MathOperations.subtractionOnly,
+                    ),
+                    // Multiplication
+                    _buildOperationButton(
+                      context,
+                      setDialogState,
+                      MathOperations.multiplicationOnly,
+                      '×',
+                      _mathOperations == MathOperations.multiplicationOnly,
+                    ),
+                    // Mélangé
+                    _buildOperationButton(
+                      context,
+                      setDialogState,
+                      MathOperations.mixed,
+                      '±×',
+                      _mathOperations == MathOperations.mixed,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Exemple du calcul actuel
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Exemple:',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _getExampleProblem(),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationButton(
+    BuildContext context,
+    StateSetter setDialogState,
+    MathOperations operation,
+    String symbol,
+    bool isSelected,
+  ) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: ElevatedButton(
+          onPressed: () {
+            setDialogState(() {
+              _mathOperations = operation;
+            });
+            setState(() {
+              _mathOperations = operation;
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.surface,
+            foregroundColor: isSelected
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.onSurface,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.outline,
+              ),
+            ),
+          ),
+          child: Text(
+            symbol,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getExampleProblem() {
+    switch (_mathOperations) {
+      case MathOperations.additionOnly:
+        return _mathDifficulty == MathDifficulty.easy
+            ? '23 + 17 = ?'
+            : _mathDifficulty == MathDifficulty.medium
+            ? '67 + 84 = ?'
+            : '156 + 127 = ?';
+      case MathOperations.subtractionOnly:
+        return _mathDifficulty == MathDifficulty.easy
+            ? '45 - 12 = ?'
+            : _mathDifficulty == MathDifficulty.medium
+            ? '89 - 34 = ?'
+            : '178 - 89 = ?';
+      case MathOperations.multiplicationOnly:
+        return _mathDifficulty == MathDifficulty.easy
+            ? '7 × 6 = ?'
+            : _mathDifficulty == MathDifficulty.medium
+            ? '11 × 12 = ?'
+            : '14 × 15 = ?';
+      case MathOperations.mixed:
+        return _mathDifficulty == MathDifficulty.easy
+            ? '12 + 8 = ?'
+            : _mathDifficulty == MathDifficulty.medium
+            ? '9 × 7 = ?'
+            : '145 - 78 = ?';
+    }
+  }
+
+  IconData _getUnlockMethodIcon(AlarmUnlockMethod method) {
+    switch (method) {
+      case AlarmUnlockMethod.simple:
+        return Icons.touch_app;
+      case AlarmUnlockMethod.math:
+        return Icons.calculate;
+    }
+  }
+
   Future<void> _selectSound() async {
     final result = await showDialog<String>(
       context: context,
@@ -778,6 +1092,9 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       vibrate: _vibrate,
       snoozeMinutes: _snoozeMinutes,
       soundPath: _selectedSoundPath,
+      unlockMethod: _unlockMethod,
+      mathDifficulty: _mathDifficulty,
+      mathOperations: _mathOperations,
     );
 
     Navigator.pop(context, alarm);

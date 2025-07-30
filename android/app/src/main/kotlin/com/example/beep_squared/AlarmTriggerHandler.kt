@@ -17,12 +17,12 @@ object AlarmTriggerHandler {
      * Main alarm trigger handler
      * Determines the best way to display the alarm based on device state
      */
-    fun handleAlarmTrigger(context: Context, alarmId: String, label: String, soundPath: String) {
-        Log.d(TAG, "Processing alarm trigger: $alarmId")
+    fun handleAlarmTrigger(context: Context, alarmId: String, label: String, soundPath: String, unlockMethod: String = "simple", mathDifficulty: String = "easy", mathOperations: String = "mixed") {
+        Log.d(TAG, "Processing alarm trigger: $alarmId with unlock method: $unlockMethod, difficulty: $mathDifficulty, operations: $mathOperations")
         
         // Check if this is a snooze alarm
         if (alarmId.startsWith("snooze_")) {
-            handleSnoozeAlarmTrigger(context, alarmId, label, soundPath)
+            handleSnoozeAlarmTrigger(context, alarmId, label, soundPath, unlockMethod, mathDifficulty, mathOperations)
             return
         }
         
@@ -30,7 +30,7 @@ object AlarmTriggerHandler {
             // Primary: Use modern overlay service for consistent behavior
             if (canShowOverlay(context)) {
                 Log.d(TAG, "Using overlay service for alarm: $alarmId")
-                AlarmOverlayService.showAlarmOverlay(context, alarmId, label, soundPath)
+                AlarmOverlayService.showAlarmOverlay(context, alarmId, label, soundPath, unlockMethod, mathDifficulty, mathOperations)
             } else {
                 // Fallback: Use notification with full-screen intent
                 Log.d(TAG, "Using notification fallback for alarm: $alarmId")
@@ -48,8 +48,8 @@ object AlarmTriggerHandler {
      * Handle snooze alarm triggers
      * Re-triggers the original alarm after snooze period
      */
-    private fun handleSnoozeAlarmTrigger(context: Context, snoozeAlarmId: String, label: String, soundPath: String) {
-        Log.d(TAG, "Processing snooze alarm trigger: $snoozeAlarmId")
+    private fun handleSnoozeAlarmTrigger(context: Context, snoozeAlarmId: String, label: String, soundPath: String, unlockMethod: String = "simple", mathDifficulty: String = "easy", mathOperations: String = "mixed") {
+        Log.d(TAG, "Processing snooze alarm trigger: $snoozeAlarmId with unlock method: $unlockMethod")
         
         // Extract original alarm ID (remove "snooze_" prefix)
         val originalAlarmId = snoozeAlarmId.removePrefix("snooze_")
@@ -61,7 +61,7 @@ object AlarmTriggerHandler {
             // Trigger the original alarm again
             if (canShowOverlay(context)) {
                 Log.d(TAG, "Triggering snoozed alarm via overlay: $originalAlarmId")
-                AlarmOverlayService.showAlarmOverlay(context, originalAlarmId, label, soundPath)
+                AlarmOverlayService.showAlarmOverlay(context, originalAlarmId, label, soundPath, unlockMethod, mathDifficulty, mathOperations)
             } else {
                 Log.d(TAG, "Triggering snoozed alarm via notification: $originalAlarmId")
                 AlarmNotificationHelper.showUnifiedAlarmNotification(context, originalAlarmId, label)

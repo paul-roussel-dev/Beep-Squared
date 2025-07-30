@@ -91,6 +91,7 @@ class AndroidAlarmService {
         'alarmId': alarmId,
         'label': alarm.label,
         'ringtone': alarm.soundPath,
+        'unlockMethod': alarm.unlockMethod.name,
         'immediate': true,
       });
 
@@ -143,6 +144,9 @@ class AndroidAlarmService {
         'scheduledTime': scheduledTime.millisecondsSinceEpoch,
         'label': alarm.label,
         'soundPath': alarm.soundPath,
+        'unlockMethod': alarm.unlockMethod.name,
+        'mathDifficulty': alarm.mathDifficulty.name,
+        'mathOperations': alarm.mathOperations.name,
         'vibrate': alarm.vibrate,
         'weekDays': alarm.weekDays,
       });

@@ -1,8 +1,5 @@
 package com.example.beep_squared
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -24,75 +21,64 @@ import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.view.animation.AccelerateDecelerateInterpolator
-import android.view.animation.BounceInterpolator
 import android.widget.Button
-import android.widget.FrameLayout
+import android.widget.GridLayout
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.random.Random
 
+/**
+ * Modern Alarm Overlay Service - Completely rewritten for better UI and math challenges
+ */
 class AlarmOverlayService : Service() {
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
     private var mediaPlayer: MediaPlayer? = null
     private val handler = Handler(Looper.getMainLooper())
     private var timeUpdateRunnable: Runnable? = null
-    private var pulseAnimator: ValueAnimator? = null
+
+    // Math challenge components
+    private var currentAnswer: Int = 0
+    private var userInput: String = ""
+    private var mathQuestionText: TextView? = null
+    private var mathInputText: TextView? = null
+    private var dismissButton: Button? = null
     
+    // Store current math settings for random button
+    private var currentMathDifficulty: String = "easy"
+    private var currentMathOperations: String = "mixed"
+
     companion object {
         private const val SNOOZE_DURATION_MINUTES = 5
         private const val SNOOZE_NOTIFICATION_CHANNEL_ID = "snooze_notification_channel"
         private const val SNOOZE_NOTIFICATION_ID = 1001
-        
-        fun showAlarmOverlay(context: Context, alarmId: String, label: String, soundPath: String = "default") {
+
+        fun showAlarmOverlay(
+            context: Context,
+            alarmId: String,
+            label: String,
+            soundPath: String = "default",
+            unlockMethod: String = "simple",
+            mathDifficulty: String = "easy",
+            mathOperations: String = "mixed"
+        ) {
             val intent = Intent(context, AlarmOverlayService::class.java).apply {
                 putExtra("alarmId", alarmId)
                 putExtra("label", label)
                 putExtra("soundPath", soundPath)
+                putExtra("unlockMethod", unlockMethod)
+                putExtra("mathDifficulty", mathDifficulty)
+                putExtra("mathOperations", mathOperations)
             }
             context.startService(intent)
         }
-        
-        /**
-         * Test method to show a simple notification for debugging
-         */
-        fun testNotification(context: Context) {
-            try {
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                
-                // Create test channel
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val testChannel = NotificationChannel(
-                        "test_channel",
-                        "Test Notifications",
-                        NotificationManager.IMPORTANCE_HIGH
-                    )
-                    notificationManager.createNotificationChannel(testChannel)
-                }
-                
-                val notification = NotificationCompat.Builder(context, "test_channel")
-                    .setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setContentTitle("Test Notification")
-                    .setContentText("This is a test notification")
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setAutoCancel(true)
-                    .build()
-                
-                notificationManager.notify(9999, notification)
-                Log.d("AlarmOverlayService", "Test notification posted")
-                
-            } catch (e: Exception) {
-                Log.e("AlarmOverlayService", "Error posting test notification", e)
-            }
-        }
+
         fun cancelSnoozeNotification(context: Context, alarmId: String) {
             try {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -103,28 +89,31 @@ class AlarmOverlayService : Service() {
             }
         }
     }
-    
+
     override fun onCreate() {
         super.onCreate()
-        Log.d("AlarmOverlayService", "Service created")
+        Log.d("AlarmOverlayService", "Modern Service created")
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     }
-    
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("AlarmOverlayService", "Service started")
-        
+        Log.d("AlarmOverlayService", "Modern Service started")
+
         val alarmId = intent?.getStringExtra("alarmId") ?: "unknown"
         val label = intent?.getStringExtra("label") ?: "Alarm"
-        
-        // Create notification channel first to ensure it exists
+        val unlockMethod = intent?.getStringExtra("unlockMethod") ?: "simple"
+        val mathDifficulty = intent?.getStringExtra("mathDifficulty") ?: "easy"
+        val mathOperations = intent?.getStringExtra("mathOperations") ?: "mixed"
+
         createSnoozeNotificationChannel()
-        
         startAlarmSound()
-        showAlarmOverlay(alarmId, label)
-        
+        showModernAlarmOverlay(alarmId, label, unlockMethod, mathDifficulty, mathOperations)
+
         return START_NOT_STICKY
     }
-    
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
     private fun startAlarmSound() {
         try {
             val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
@@ -135,12 +124,19 @@ class AlarmOverlayService : Service() {
                 prepare()
                 start()
             }
+            Log.d("AlarmOverlayService", "Alarm sound started")
         } catch (e: Exception) {
             Log.e("AlarmOverlayService", "Error starting alarm sound: ${e.message}")
         }
     }
-    
-    private fun showAlarmOverlay(alarmId: String, label: String) {
+
+    private fun showModernAlarmOverlay(
+        alarmId: String,
+        label: String,
+        unlockMethod: String,
+        mathDifficulty: String,
+        mathOperations: String
+    ) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!android.provider.Settings.canDrawOverlays(this)) {
@@ -149,18 +145,18 @@ class AlarmOverlayService : Service() {
                     return
                 }
             }
-            
-            overlayView = createModernOverlayView(alarmId, label)
-            
+
+            overlayView = createModernAlarmView(alarmId, label, unlockMethod, mathDifficulty, mathOperations)
+
             val layoutParams = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                     PixelFormat.TRANSLUCENT
                 )
             } else {
@@ -169,607 +165,583 @@ class AlarmOverlayService : Service() {
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                     PixelFormat.TRANSLUCENT
                 )
             }
-            
+
             windowManager?.addView(overlayView, layoutParams)
-            startEntranceAnimation()
-            
+            Log.d("AlarmOverlayService", "Modern overlay view added to window")
+
         } catch (e: Exception) {
-            Log.e("AlarmOverlayService", "Error creating overlay: ${e.message}")
+            Log.e("AlarmOverlayService", "Error creating modern overlay: ${e.message}")
             stopSelf()
         }
     }
 
-    private fun createModernOverlayView(alarmId: String, label: String): View {
-        return RelativeLayout(this).apply {
-            // Beautiful gradient background with multiple colors
-            background = GradientDrawable().apply {
-                colors = intArrayOf(
-                    Color.parseColor("#0D47A1"), // Deep blue
-                    Color.parseColor("#1565C0"), // Blue  
-                    Color.parseColor("#1976D2"), // Light blue
-                    Color.parseColor("#283593")  // Dark indigo
-                )
-                orientation = GradientDrawable.Orientation.TL_BR
-            }
-            
+    private fun createModernAlarmView(
+        alarmId: String,
+        label: String,
+        unlockMethod: String,
+        mathDifficulty: String,
+        mathOperations: String
+    ): View {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            
-            // Add floating particles effect container
-            addView(createParticlesEffect())
-            
-            // Main content container
-            addView(LinearLayout(this@AlarmOverlayService).apply {
-                orientation = LinearLayout.VERTICAL
+
+            // Modern gradient background
+            background = GradientDrawable().apply {
+                colors = intArrayOf(
+                    Color.parseColor("#0D47A1"), // Deep blue
+                    Color.parseColor("#1565C0"), // Medium blue
+                    Color.parseColor("#1976D2")  // Light blue
+                )
+                orientation = GradientDrawable.Orientation.TOP_BOTTOM
+            }
+
+            setPadding(dpToPx(20), dpToPx(20), dpToPx(20), dpToPx(20))
+            gravity = Gravity.CENTER
+
+            // Header Section
+            addView(createHeaderSection(label))
+
+            // Time Display
+            addView(createTimeDisplay())
+
+            // Math Challenge or Simple Dismiss
+            if (unlockMethod == "math") {
+                addView(createMathChallengeSection(mathDifficulty, mathOperations, alarmId))
+            } else {
+                addView(createSimpleDismissSection(alarmId))
+            }
+        }
+    }
+
+    private fun createHeaderSection(label: String): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dpToPx(8))
+
+            // Alarm Icon
+            addView(TextView(this@AlarmOverlayService).apply {
+                text = "⏰"
+                textSize = 36f
+                setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
-                layoutParams = RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.MATCH_PARENT,
-                    RelativeLayout.LayoutParams.MATCH_PARENT
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    addRule(RelativeLayout.CENTER_IN_PARENT)
+                    bottomMargin = dpToPx(4)
                 }
-                setPadding(dpToPx(40), dpToPx(80), dpToPx(40), dpToPx(80))
-                
-                // Animated alarm icon with glow effect
-                addView(createAnimatedAlarmIcon())
-                
-                // Elegant title with custom typography
-                addView(createStyledTitle())
-                
-                // Alarm label with beautiful styling
-                addView(createStyledLabel(label))
-                
-                // Large time display with animation
-                addView(createAnimatedTimeDisplay())
-                
-                // Modern action buttons with slide gestures
-                addView(createModernActionButtons(alarmId))
-                
-                // Slide to dismiss area
-                addView(createSlideToDismissArea())
             })
-            
-            // Add status indicators
-            addView(createStatusIndicators())
+
+            // Title
+            addView(TextView(this@AlarmOverlayService).apply {
+                text = "ALARM"
+                textSize = 20f
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(2)
+                }
+            })
+
+            // Label
+            addView(TextView(this@AlarmOverlayService).apply {
+                text = label
+                textSize = 14f
+                setTextColor(Color.parseColor("#E3F2FD"))
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            })
         }
     }
-    
-    private fun createParticlesEffect(): View {
-        return FrameLayout(this).apply {
-            layoutParams = RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.MATCH_PARENT,
-                RelativeLayout.LayoutParams.MATCH_PARENT
-            )
-            
-            // Add floating particles
-            repeat(12) { index ->
-                addView(TextView(this@AlarmOverlayService).apply {
-                    text = listOf("✦", "✧", "⭐", "◆", "◇")[index % 5]
-                    textSize = (8 + index % 6).toFloat()
-                    setTextColor(Color.parseColor("#64B5F6"))
-                    alpha = 0.3f + (index % 3) * 0.2f
-                    
-                    layoutParams = FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        leftMargin = dpToPx(20 + index * 30)
-                        topMargin = dpToPx(50 + index * 40)
-                    }
-                    
-                    // Floating animation
-                    post {
-                        startFloatingAnimation(index * 300L)
-                    }
-                })
-            }
-        }
-    }
-    
-    private fun createAnimatedAlarmIcon(): TextView {
+
+    private fun createTimeDisplay(): TextView {
         return TextView(this).apply {
-            text = "⏰"
-            textSize = 100f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dpToPx(20))
-            
-            // Add shadow/glow effect
-            setShadowLayer(20f, 0f, 0f, Color.parseColor("#81C784"))
-            
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-            }
-            
-            // Start pulsing animation
-            post { startPulseAnimation() }
-        }
-    }
-    
-    private fun createStyledTitle(): TextView {
-        return TextView(this).apply {
-            text = "ALARM"
-            textSize = 42f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            letterSpacing = 0.15f
-            setPadding(0, 0, 0, dpToPx(12))
-            
-            // Glowing text effect
-            setShadowLayer(15f, 0f, 0f, Color.parseColor("#90CAF9"))
-            
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-            }
-        }
-    }
-    
-    private fun createStyledLabel(label: String): TextView {
-        return TextView(this).apply {
-            text = label
-            textSize = 22f
-            setTextColor(Color.parseColor("#E3F2FD"))
-            gravity = Gravity.CENTER
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            setPadding(dpToPx(20), 0, dpToPx(20), dpToPx(32))
-            alpha = 0.9f
-            
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-            }
-        }
-    }
-    
-    private fun createAnimatedTimeDisplay(): TextView {
-        return TextView(this).apply {
-            textSize = 56f
+            textSize = 26f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-            setPadding(0, 0, 0, dpToPx(40))
-            
-            // Subtle glow
-            setShadowLayer(10f, 0f, 0f, Color.parseColor("#42A5F5"))
-            
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dpToPx(16)
+            }
+
+            // Start time updates
+            startTimeUpdates()
+        }
+    }
+
+    private fun createMathChallengeSection(
+        mathDifficulty: String,
+        mathOperations: String,
+        alarmId: String
+    ): LinearLayout {
+        // Store current settings for random button
+        currentMathDifficulty = mathDifficulty
+        currentMathOperations = mathOperations
+        
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12))
+
+            // Background card
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#1A237E"))
+                cornerRadius = dpToPx(16).toFloat()
+                setStroke(dpToPx(2), Color.parseColor("#3F51B5"))
+            }
+
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dpToPx(8)
+            }
+
+            // Math Challenge Title
+            addView(TextView(this@AlarmOverlayService).apply {
+                text = "Solve to dismiss alarm"
+                textSize = 12f
+                setTextColor(Color.parseColor("#BBDEFB"))
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(8)
+                }
+            })
+
+            // Math Question
+            mathQuestionText = TextView(this@AlarmOverlayService).apply {
+                textSize = 20f
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(10)
+                }
+            }
+            addView(mathQuestionText)
+
+            // User Input Display
+            mathInputText = TextView(this@AlarmOverlayService).apply {
+                text = "Enter answer: _"
+                textSize = 16f
+                setTextColor(Color.parseColor("#64B5F6"))
+                gravity = Gravity.CENTER
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#0D47A1"))
+                    cornerRadius = dpToPx(8).toFloat()
+                }
+                setPadding(dpToPx(12), dpToPx(8), dpToPx(12), dpToPx(8))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(12)
+                }
+            }
+            addView(mathInputText)
+
+            // Number Keypad
+            addView(createNumberKeypad())
+
+            // Action Buttons Row 1: Random & Clear
+            addView(LinearLayout(this@AlarmOverlayService).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(8)
+                }
+                
+                // Random Button (dice)
+                addView(createActionButton("🎲", Color.parseColor("#9C27B0")) {
+                    generateMathChallenge(currentMathDifficulty, currentMathOperations)
+                    clearInput()
+                })
+
+                // Space
+                addView(View(this@AlarmOverlayService).apply {
+                    layoutParams = LinearLayout.LayoutParams(dpToPx(16), 0)
+                })
+
+                // Clear Button
+                addView(createActionButton("CLEAR", Color.parseColor("#FF5722")) {
+                    clearInput()
+                })
+            })
+
+            // Action Buttons Row 2: Validate & Snooze
+            addView(LinearLayout(this@AlarmOverlayService).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                
+                // Validate Button
+                dismissButton = createActionButton("VALIDATE", Color.parseColor("#4CAF50")) {
+                    checkAnswer(alarmId)
+                }
+                dismissButton?.isEnabled = false
+                addView(dismissButton)
+
+                // Space
+                addView(View(this@AlarmOverlayService).apply {
+                    layoutParams = LinearLayout.LayoutParams(dpToPx(16), 0)
+                })
+
+                // Snooze Button
+                addView(createActionButton("SNOOZE", Color.parseColor("#FF7043")) {
+                    snoozeAlarm(alarmId)
+                })
+            })
+
+            // Generate first math challenge
+            generateMathChallenge(mathDifficulty, mathOperations)
+        }
+    }
+
+    private fun createNumberKeypad(): GridLayout {
+        return GridLayout(this).apply {
+            rowCount = 4
+            columnCount = 3
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
+                bottomMargin = dpToPx(8)
             }
+
+            // Create number buttons 1-9, 0
+            val numbers = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫")
             
-            // Update time every second
-            post { startTimeUpdates(this) }
+            numbers.forEach { number ->
+                if (number.isEmpty()) {
+                    // Empty space
+                    addView(View(this@AlarmOverlayService).apply {
+                        layoutParams = GridLayout.LayoutParams().apply {
+                            width = dpToPx(56) 
+                            height = dpToPx(56)
+                            setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3))
+                        }
+                    })
+                } else {
+                    addView(createKeypadButton(number))
+                }
+            }
         }
     }
-    
-    private fun createModernActionButtons(alarmId: String): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dpToPx(32))
-            
-            // Snooze button
-            addView(createStyledButton("SNOOZE", false, Color.parseColor("#FF7043")) {
-                snoozeAlarm(alarmId)
-            })
-            
-            // Space
-            addView(View(this@AlarmOverlayService).apply {
-                layoutParams = LinearLayout.LayoutParams(dpToPx(24), 0)
-            })
-            
-            // Dismiss button
-            addView(createStyledButton("DISMISS", true, Color.parseColor("#4CAF50")) {
-                dismissAlarmWithAnimation()
-            })
-        }
-    }
-    
-    private fun createStyledButton(text: String, isPrimary: Boolean, accentColor: Int, onClick: () -> Unit): Button {
+
+    private fun createKeypadButton(text: String): Button {
         return Button(this).apply {
             this.text = text
-            textSize = 16f
+            textSize = 20f
+            setTextColor(Color.WHITE)
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             
             background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dpToPx(25).toFloat()
-                
-                if (isPrimary) {
-                    colors = intArrayOf(accentColor, darkenColor(accentColor, 0.2f))
-                    orientation = GradientDrawable.Orientation.TOP_BOTTOM
-                    setTextColor(Color.WHITE)
-                } else {
-                    setColor(Color.TRANSPARENT)
-                    setStroke(dpToPx(2), accentColor)
-                    setTextColor(accentColor)
-                }
+                setColor(Color.parseColor("#283593"))
+                cornerRadius = dpToPx(8).toFloat()
+                setStroke(dpToPx(1), Color.parseColor("#3F51B5"))
             }
             
-            layoutParams = LinearLayout.LayoutParams(dpToPx(140), dpToPx(50))
-            elevation = dpToPx(8).toFloat()
-            
-            setOnClickListener { button ->
-                (button as Button).startButtonAnimation {
-                    onClick()
+            layoutParams = GridLayout.LayoutParams().apply {
+                width = dpToPx(50)
+                height = dpToPx(50)
+                setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3))
+            }
+
+            setOnClickListener {
+                when (text) {
+                    "⌫" -> backspaceInput()
+                    else -> addToInput(text)
                 }
             }
         }
     }
-    
-    private fun createSlideToDismissArea(): FrameLayout {
-        return FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dpToPx(70)
-            )
+
+    private fun createActionButton(text: String, color: Int, onClick: () -> Unit): Button {
+        return Button(this).apply {
+            this.text = text
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             
-            // Background track
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#1A237E"))
-                cornerRadius = dpToPx(35).toFloat()
-                alpha = 150
+                setColor(color)
+                cornerRadius = dpToPx(12).toFloat()
             }
-            
-            // Instruction text
-            addView(TextView(this@AlarmOverlayService).apply {
-                text = "← Swipe to dismiss →"
-                textSize = 16f
-                setTextColor(Color.parseColor("#90CAF9"))
-                gravity = Gravity.CENTER
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
-                layoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                )
-                alpha = 0.8f
-            })
-            
-            // Touch handling
-            setupSwipeGesture()
+
+            layoutParams = LinearLayout.LayoutParams(
+                dpToPx(120),
+                dpToPx(48)
+            )
+
+            setOnClickListener { onClick() }
         }
     }
-    
-    private fun createStatusIndicators(): LinearLayout {
+
+    private fun createSimpleDismissSection(alarmId: String): LinearLayout {
         return LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
+            orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            layoutParams = RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.WRAP_CONTENT,
-                RelativeLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                addRule(RelativeLayout.ALIGN_PARENT_TOP)
-                addRule(RelativeLayout.CENTER_HORIZONTAL)
-                topMargin = dpToPx(40)
-            }
             
-            // Sound indicator
             addView(TextView(this@AlarmOverlayService).apply {
-                text = "🔊"
-                textSize = 24f
-                setPadding(dpToPx(16), 0, dpToPx(16), 0)
-                alpha = 0.7f
+                text = "Tap to dismiss alarm"
+                textSize = 18f
+                setTextColor(Color.parseColor("#BBDEFB"))
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(20)
+                }
             })
-            
-            // Time indicator
-            addView(TextView(this@AlarmOverlayService).apply {
-                text = SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date())
-                textSize = 14f
-                setTextColor(Color.parseColor("#90CAF9"))
-                alpha = 0.8f
+
+            // Action Buttons
+            addView(LinearLayout(this@AlarmOverlayService).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                
+                // Dismiss Button
+                addView(createActionButton("DISMISS ALARM", Color.parseColor("#4CAF50")) {
+                    dismissAlarm(alarmId)
+                })
+
+                // Space
+                addView(View(this@AlarmOverlayService).apply {
+                    layoutParams = LinearLayout.LayoutParams(dpToPx(16), 0)
+                })
+
+                // Snooze Button
+                addView(createActionButton("SNOOZE", Color.parseColor("#FF7043")) {
+                    snoozeAlarm(alarmId)
+                })
             })
         }
     }
-    
-    // Animation methods
-    private fun startEntranceAnimation() {
-        overlayView?.let { view ->
-            view.alpha = 0f
-            view.scaleX = 0.8f
-            view.scaleY = 0.8f
-            
-            view.animate()
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(600)
-                .setInterpolator(BounceInterpolator())
-                .start()
+
+    private fun createSnoozeSection(alarmId: String): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(0, dpToPx(12), 0, 0)
+
+            addView(createActionButton("SNOOZE ($SNOOZE_DURATION_MINUTES MIN)", Color.parseColor("#FF7043")) {
+                snoozeAlarm(alarmId)
+            })
         }
     }
-    
-    private fun TextView.startPulseAnimation() {
-        pulseAnimator = ValueAnimator.ofFloat(1f, 1.1f, 1f).apply {
-            duration = 1500
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = AccelerateDecelerateInterpolator()
-            addUpdateListener { animation ->
-                val scale = animation.animatedValue as Float
-                this@startPulseAnimation.scaleX = scale
-                this@startPulseAnimation.scaleY = scale
+
+    // Math Challenge Logic
+    private fun generateMathChallenge(difficulty: String, operations: String) {
+        val (question, answer) = when (operations) {
+            "additionOnly" -> generateAddition(difficulty)
+            "subtractionOnly" -> generateSubtraction(difficulty)
+            "multiplicationOnly" -> generateMultiplication(difficulty)
+            "mixed" -> generateMixed(difficulty)
+            else -> generateMixed(difficulty)
+        }
+
+        currentAnswer = answer
+        mathQuestionText?.text = question
+        Log.d("AlarmOverlayService", "Generated math challenge: $question = $answer")
+    }
+
+    private fun generateAddition(difficulty: String): Pair<String, Int> {
+        return when (difficulty) {
+            "easy" -> {
+                val a = Random.nextInt(10, 50)
+                val b = Random.nextInt(10, 50)
+                Pair("$a + $b = ?", a + b)
             }
-            start()
+            "medium" -> {
+                val a = Random.nextInt(20, 100)
+                val b = Random.nextInt(20, 100)
+                Pair("$a + $b = ?", a + b)
+            }
+            "hard" -> {
+                val a = Random.nextInt(100, 500)
+                val b = Random.nextInt(100, 500)
+                Pair("$a + $b = ?", a + b)
+            }
+            else -> generateAddition("easy")
         }
     }
-    
-    private fun TextView.startFloatingAnimation(delay: Long) {
-        postDelayed({
-            val animator = ObjectAnimator.ofFloat(this, "translationY", 0f, -dpToPx(20).toFloat(), 0f)
-            animator.duration = (3000 + (0..1000).random()).toLong()
-            animator.repeatCount = ObjectAnimator.INFINITE
-            animator.interpolator = AccelerateDecelerateInterpolator()
-            animator.start()
-        }, delay)
+
+    private fun generateSubtraction(difficulty: String): Pair<String, Int> {
+        return when (difficulty) {
+            "easy" -> {
+                val a = Random.nextInt(20, 60)
+                val b = Random.nextInt(10, a)
+                Pair("$a - $b = ?", a - b)
+            }
+            "medium" -> {
+                val a = Random.nextInt(50, 150)
+                val b = Random.nextInt(20, a)
+                Pair("$a - $b = ?", a - b)
+            }
+            "hard" -> {
+                val a = Random.nextInt(200, 800)
+                val b = Random.nextInt(100, a)
+                Pair("$a - $b = ?", a - b)
+            }
+            else -> generateSubtraction("easy")
+        }
     }
-    
-    private fun startTimeUpdates(timeView: TextView) {
+
+    private fun generateMultiplication(difficulty: String): Pair<String, Int> {
+        return when (difficulty) {
+            "easy" -> {
+                val a = Random.nextInt(2, 12)
+                val b = Random.nextInt(2, 12)
+                Pair("$a × $b = ?", a * b)
+            }
+            "medium" -> {
+                val a = Random.nextInt(5, 20)
+                val b = Random.nextInt(5, 20)
+                Pair("$a × $b = ?", a * b)
+            }
+            "hard" -> {
+                val a = Random.nextInt(10, 30)
+                val b = Random.nextInt(10, 30)
+                Pair("$a × $b = ?", a * b)
+            }
+            else -> generateMultiplication("easy")
+        }
+    }
+
+    private fun generateMixed(difficulty: String): Pair<String, Int> {
+        return when (Random.nextInt(3)) {
+            0 -> generateAddition(difficulty)
+            1 -> generateSubtraction(difficulty)
+            2 -> generateMultiplication(difficulty)
+            else -> generateAddition(difficulty)
+        }
+    }
+
+    // Input handling
+    private fun addToInput(digit: String) {
+        if (userInput.length < 6) { // Limit input length
+            userInput += digit
+            updateInputDisplay()
+        }
+    }
+
+    private fun backspaceInput() {
+        if (userInput.isNotEmpty()) {
+            userInput = userInput.dropLast(1)
+            updateInputDisplay()
+        }
+    }
+
+    private fun clearInput() {
+        userInput = ""
+        updateInputDisplay()
+    }
+
+    private fun updateInputDisplay() {
+        val displayText = if (userInput.isEmpty()) {
+            "Enter answer: _"
+        } else {
+            "Answer: $userInput"
+        }
+        mathInputText?.text = displayText
+        dismissButton?.isEnabled = userInput.isNotEmpty()
+    }
+
+    private fun checkAnswer(alarmId: String) {
+        try {
+            val userAnswer = userInput.toInt()
+            if (userAnswer == currentAnswer) {
+                dismissAlarm(alarmId)
+            } else {
+                // Wrong answer - clear input and generate new challenge
+                userInput = ""
+                updateInputDisplay()
+                mathQuestionText?.text = "Wrong! Try again..."
+                handler.postDelayed({
+                    generateMathChallenge("easy", "mixed") // Reset to easier challenge
+                }, 1000)
+            }
+        } catch (e: NumberFormatException) {
+            clearInput()
+        }
+    }
+
+    // Alarm Actions
+    private fun dismissAlarm(alarmId: String) {
+        Log.d("AlarmOverlayService", "Dismissing alarm: $alarmId")
+        stopAlarmAndCleanup()
+    }
+
+    private fun snoozeAlarm(alarmId: String) {
+        Log.d("AlarmOverlayService", "Snoozing alarm: $alarmId")
+        
+        // Schedule snooze alarm
+        val snoozeTime = System.currentTimeMillis() + (SNOOZE_DURATION_MINUTES * 60 * 1000)
+        scheduleSnoozeAlarm(alarmId, snoozeTime)
+        
+        // Show snooze notification
+        showSnoozeNotification(alarmId, snoozeTime)
+        
+        stopAlarmAndCleanup()
+    }
+
+    // Utility methods
+    private fun startTimeUpdates() {
         timeUpdateRunnable = object : Runnable {
             override fun run() {
-                timeView.text = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+                val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                val currentTime = timeFormat.format(Date())
+                (overlayView?.findViewById<TextView>(android.R.id.text1) ?: 
+                 overlayView?.let { findTimeTextView(it) })?.text = currentTime
                 handler.postDelayed(this, 1000)
             }
         }
         handler.post(timeUpdateRunnable!!)
     }
-    
-    private fun FrameLayout.setupSwipeGesture() {
-        var startX = 0f
-        var startY = 0f
-        
-        setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    startX = event.x
-                    startY = event.y
-                    alpha = 0.8f
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val deltaX = kotlin.math.abs(event.x - startX)
-                    val deltaY = kotlin.math.abs(event.y - startY)
-                    
-                    if (deltaX > deltaY && deltaX > dpToPx(50)) {
-                        alpha = 1f - (deltaX / width * 0.5f)
-                        
-                        if (deltaX > width * 0.6f) {
-                            dismissAlarmWithAnimation()
-                            return@setOnTouchListener true
-                        }
-                    }
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    this.animate().alpha(1f).setDuration(200).start()
-                    false
-                }
-                else -> false
+
+    private fun findTimeTextView(view: View): TextView? {
+        if (view is TextView && view.textSize > 40f) {
+            return view
+        }
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val result = findTimeTextView(view.getChildAt(i))
+                if (result != null) return result
             }
         }
+        return null
     }
-    
-    private fun Button.startButtonAnimation(onComplete: () -> Unit) {
-        this.animate()
-            .scaleX(0.95f)
-            .scaleY(0.95f)
-            .setDuration(100)
-            .withEndAction {
-                this.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(100)
-                    .withEndAction { onComplete() }
-                    .start()
-            }
-            .start()
-    }
-    
-    private fun dismissAlarmWithAnimation() {
-        overlayView?.animate()
-            ?.alpha(0f)
-            ?.scaleX(0.8f)
-            ?.scaleY(0.8f)
-            ?.setDuration(300)
-            ?.withEndAction {
-                dismissAlarm()
-            }
-            ?.start()
-    }
-    
-    // Snooze functionality
-    private fun snoozeAlarm(alarmId: String) {
-        Log.d("AlarmOverlayService", "Snoozing alarm: $alarmId")
-        
-        // Calculate snooze time
-        val snoozeTime = Calendar.getInstance().apply {
-            add(Calendar.MINUTE, SNOOZE_DURATION_MINUTES)
-        }
-        
-        Log.d("AlarmOverlayService", "Snooze time calculated: ${snoozeTime.time}")
-        
-        // Show snooze notification
-        showSnoozeNotification(snoozeTime.time)
-        
-        // Schedule snooze alarm
-        scheduleSnoozeAlarm(alarmId, snoozeTime.timeInMillis)
-        
-        // Dismiss current alarm with animation
-        dismissAlarmWithAnimation()
-    }
-    
-    private fun showSnoozeNotification(snoozeTime: Date) {
-        try {
-            createSnoozeNotificationChannel()
-            
-            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            val snoozeTimeString = timeFormat.format(snoozeTime)
-            
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            
-            // Check if notifications are enabled
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !notificationManager.areNotificationsEnabled()) {
-                Log.w("AlarmOverlayService", "Notifications are disabled by user")
-                return
-            }
-            
-            // Create notification with higher priority and better visibility
-            val notification = NotificationCompat.Builder(this, SNOOZE_NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-                .setContentTitle("⏰ Alarm Snoozed")
-                .setContentText("Next alarm: $snoozeTimeString (in $SNOOZE_DURATION_MINUTES min)")
-                .setStyle(NotificationCompat.BigTextStyle()
-                    .bigText("Your alarm has been snoozed for $SNOOZE_DURATION_MINUTES minutes.\n\nNext alarm will ring at: $snoozeTimeString"))
-                .setPriority(NotificationCompat.PRIORITY_HIGH) // Changed to HIGH priority
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
-                .setAutoCancel(true)
-                .setOngoing(false) // Make it dismissible
-                .setShowWhen(true)
-                .setWhen(snoozeTime.time)
-                .setColor(Color.parseColor("#1565C0"))
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setDefaults(NotificationCompat.DEFAULT_LIGHTS) // Add lights
-                .setLights(Color.parseColor("#1565C0"), 1000, 1000) // Blue light blink
-                .build()
-            
-            notificationManager.notify(SNOOZE_NOTIFICATION_ID, notification)
-            
-            Log.d("AlarmOverlayService", "Snooze notification created and posted for: $snoozeTimeString")
-            Log.d("AlarmOverlayService", "Notification ID: $SNOOZE_NOTIFICATION_ID, Channel: $SNOOZE_NOTIFICATION_CHANNEL_ID")
-            
-        } catch (e: Exception) {
-            Log.e("AlarmOverlayService", "Error showing snooze notification", e)
-        }
-    }
-    
-    private fun createSnoozeNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            
-            // Check if channel already exists
-            val existingChannel = notificationManager.getNotificationChannel(SNOOZE_NOTIFICATION_CHANNEL_ID)
-            if (existingChannel != null) {
-                Log.d("AlarmOverlayService", "Notification channel already exists")
-                return
-            }
-            
-            val channel = NotificationChannel(
-                SNOOZE_NOTIFICATION_CHANNEL_ID,
-                "Snooze Notifications",
-                NotificationManager.IMPORTANCE_HIGH // Changed to HIGH importance
-            ).apply {
-                description = "Notifications shown when alarms are snoozed"
-                enableLights(true)
-                lightColor = Color.parseColor("#1565C0")
-                enableVibration(false) // No vibration for snooze notifications
-                setShowBadge(true)
-                lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
-                
-                // Make sure the channel allows notifications
-                setBypassDnd(false)
-                canBypassDnd()
-            }
-            
-            notificationManager.createNotificationChannel(channel)
-            Log.d("AlarmOverlayService", "Snooze notification channel created with HIGH importance")
-        } else {
-            Log.d("AlarmOverlayService", "Android version < O, no channel needed")
-        }
-    }
-    
-    private fun scheduleSnoozeAlarm(alarmId: String, snoozeTimeMillis: Long) {
-        try {
-            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            
-            // Create intent for snooze alarm
-            val snoozeIntent = Intent(this, AlarmReceiver::class.java).apply {
-                putExtra(AlarmConfig.EXTRA_ALARM_ID, "${alarmId}_snooze")
-                putExtra(AlarmConfig.EXTRA_LABEL, "Snoozed Alarm")
-                putExtra(AlarmConfig.EXTRA_SOUND_PATH, "default")
-                action = "SNOOZE_ALARM_TRIGGER"
-            }
-            
-            val pendingIntent = PendingIntent.getBroadcast(
-                this,
-                alarmId.hashCode() + 1000, // Unique ID for snooze
-                snoozeIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            
-            // Schedule exact alarm for snooze
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    snoozeTimeMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    snoozeTimeMillis,
-                    pendingIntent
-                )
-            }
-            
-            Log.d("AlarmOverlayService", "Snooze alarm scheduled for: ${Date(snoozeTimeMillis)}")
-            
-        } catch (e: Exception) {
-            Log.e("AlarmOverlayService", "Error scheduling snooze alarm: ${e.message}")
-        }
-    }
-    
-    // Utility functions
-    private fun darkenColor(color: Int, factor: Float): Int {
-        val a = Color.alpha(color)
-        val r = (Color.red(color) * (1 - factor)).toInt()
-        val g = (Color.green(color) * (1 - factor)).toInt()
-        val b = (Color.blue(color) * (1 - factor)).toInt()
-        return Color.argb(a, r, g, b)
-    }
-    
-    private fun dismissAlarm() {
-        stopAlarmSound()
-        stopAnimations()
-        removeOverlay()
-        stopSelf()
-    }
-    
-    private fun stopAlarmSound() {
-        try {
-            mediaPlayer?.let {
-                if (it.isPlaying) {
-                    it.stop()
-                }
-                it.release()
-                mediaPlayer = null
-            }
-        } catch (e: Exception) {
-            Log.e("AlarmOverlayService", "Error stopping sound: ${e.message}")
-        }
-    }
-    
-    private fun stopAnimations() {
-        pulseAnimator?.cancel()
-        timeUpdateRunnable?.let { handler.removeCallbacks(it) }
-    }
-    
+
     private fun dpToPx(dp: Int): Int {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
@@ -777,24 +749,105 @@ class AlarmOverlayService : Service() {
             resources.displayMetrics
         ).toInt()
     }
-    
-    private fun removeOverlay() {
-        try {
-            overlayView?.let { view ->
-                windowManager?.removeView(view)
-                overlayView = null
+
+    private fun createSnoozeNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                SNOOZE_NOTIFICATION_CHANNEL_ID,
+                "Snooze Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications for snoozed alarms"
+                enableLights(true)
+                lightColor = Color.BLUE
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 250, 250)
             }
-        } catch (e: Exception) {
-            Log.e("AlarmOverlayService", "Error removing overlay: ${e.message}")
+
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
-    
-    override fun onDestroy() {
-        super.onDestroy()
-        stopAlarmSound()
-        stopAnimations()
-        removeOverlay()
+
+    private fun scheduleSnoozeAlarm(alarmId: String, snoozeTime: Long) {
+        try {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(this, AlarmOverlayService::class.java).apply {
+                putExtra("alarmId", alarmId)
+                putExtra("label", "Snoozed Alarm")
+                putExtra("unlockMethod", "simple")
+            }
+            
+            val pendingIntent = PendingIntent.getService(
+                this, 
+                alarmId.hashCode(), 
+                intent, 
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, snoozeTime, pendingIntent)
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, snoozeTime, pendingIntent)
+            }
+
+            Log.d("AlarmOverlayService", "Snooze alarm scheduled for: ${Date(snoozeTime)}")
+        } catch (e: Exception) {
+            Log.e("AlarmOverlayService", "Error scheduling snooze alarm", e)
+        }
     }
-    
-    override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun showSnoozeNotification(alarmId: String, snoozeTime: Long) {
+        try {
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val snoozeTimeString = timeFormat.format(Date(snoozeTime))
+
+            val notification = NotificationCompat.Builder(this, SNOOZE_NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentTitle("Alarm Snoozed")
+                .setContentText("Next alarm at $snoozeTimeString")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build()
+
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(SNOOZE_NOTIFICATION_ID, notification)
+
+            Log.d("AlarmOverlayService", "Snooze notification posted for $snoozeTimeString")
+        } catch (e: Exception) {
+            Log.e("AlarmOverlayService", "Error posting snooze notification", e)
+        }
+    }
+
+    private fun stopAlarmAndCleanup() {
+        try {
+            // Stop alarm sound
+            mediaPlayer?.let {
+                if (it.isPlaying) {
+                    it.stop()
+                }
+                it.release()
+            }
+            mediaPlayer = null
+
+            // Stop time updates
+            timeUpdateRunnable?.let { handler.removeCallbacks(it) }
+
+            // Remove overlay
+            overlayView?.let { windowManager?.removeView(it) }
+            overlayView = null
+
+            // Stop service
+            stopSelf()
+
+            Log.d("AlarmOverlayService", "Alarm stopped and cleaned up")
+        } catch (e: Exception) {
+            Log.e("AlarmOverlayService", "Error during cleanup", e)
+        }
+    }
+
+    override fun onDestroy() {
+        stopAlarmAndCleanup()
+        super.onDestroy()
+    }
 }
