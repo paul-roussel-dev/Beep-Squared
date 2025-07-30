@@ -4,7 +4,6 @@ import '../models/alarm.dart';
 import '../services/alarm_service.dart';
 import '../services/alarm_scheduler_service.dart';
 import '../services/alarm_manager_service.dart';
-import '../services/global_alarm_service.dart';
 import '../services/android_alarm_service.dart';
 import '../widgets/alarm_card.dart';
 import 'add_alarm_screen.dart';
@@ -42,9 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _initializeAlarmServices() async {
     // Set context for alarm manager
     _managerService.setContext(context);
-
-    // Set context for global alarm service
-    GlobalAlarmService.instance.setContext(context);
 
     // Initialize alarm manager
     await _managerService.initialize();
