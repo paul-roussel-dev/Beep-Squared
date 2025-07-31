@@ -108,16 +108,6 @@ class AndroidAlarmService {
     }
   }
 
-  /// Test notification functionality
-  Future<void> testNotification() async {
-    try {
-      await _channel.invokeMethod('testNotification');
-      debugPrint('Test notification sent');
-    } catch (e) {
-      debugPrint('Error sending test notification: $e');
-    }
-  }
-
   /// Check notification permission status
   Future<Map<String, bool>> checkNotificationPermission() async {
     try {

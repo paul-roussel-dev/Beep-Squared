@@ -4,7 +4,6 @@ import '../models/alarm.dart';
 import '../services/alarm_service.dart';
 import '../services/alarm_scheduler_service.dart';
 import '../services/alarm_manager_service.dart';
-import '../services/android_alarm_service.dart';
 import '../widgets/alarm_card.dart';
 import 'add_alarm_screen.dart';
 
@@ -60,59 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  /// Test notification functionality
-  Future<void> _testNotification() async {
-    try {
-      // Check notification permission status
-      final permissionStatus = await AndroidAlarmService.instance
-          .checkNotificationPermission();
-
-      if (!permissionStatus['hasPermission']! ||
-          !permissionStatus['areEnabled']!) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Notifications not enabled. Please check settings.',
-                style: TextStyle(color: Theme.of(context).colorScheme.onError),
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Send test notification
-      await AndroidAlarmService.instance.testNotification();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Test notification sent!',
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-            ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error testing notification: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error sending test notification: $e',
-              style: TextStyle(color: Theme.of(context).colorScheme.onError),
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
-  }
-
   /// Handle back button press with confirmation
   Future<bool> _onWillPop() async {
     final shouldExit = await showDialog<bool>(
@@ -152,12 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
           centerTitle: true,
           elevation: 0,
           actions: [
-            // Test notification button (debug)
-            IconButton(
-              icon: const Icon(Icons.notifications_active),
-              tooltip: 'Test Notification',
-              onPressed: _testNotification,
-            ),
             if (_alarms.isNotEmpty)
               PopupMenuButton<String>(
                 onSelected: (value) {
