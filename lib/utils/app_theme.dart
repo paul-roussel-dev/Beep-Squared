@@ -61,7 +61,7 @@ class AppTheme {
       // Card theme
       cardTheme: CardThemeData(
         elevation: 2,
-        shadowColor: lightColorScheme.shadow.withOpacity(0.1),
+        shadowColor: lightColorScheme.shadow.withValues(alpha: 0.1),
         surfaceTintColor: lightColorScheme.surfaceTint,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -125,7 +125,7 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: lightColorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: lightColorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -145,7 +145,7 @@ class AppTheme {
           vertical: 16,
         ),
         hintStyle: TextStyle(
-          color: lightColorScheme.onSurfaceVariant.withOpacity(0.7),
+          color: lightColorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
       ),
 
@@ -176,9 +176,9 @@ class AppTheme {
             if (states.contains(WidgetState.selected)) {
               return const Color(
                 0xFF1565C0,
-              ).withOpacity(0.1); // Bleu transparent
+              ).withValues(alpha: 0.1); // Bleu transparent
             }
-            return const Color(0xFF757575).withOpacity(0.1); // Gris transparent
+            return const Color(0xFF757575).withValues(alpha: 0.1); // Gris transparent
           }
           return null;
         }),
@@ -268,12 +268,12 @@ class AppTheme {
       inputDecorationTheme: lightTheme.inputDecorationTheme.copyWith(
         fillColor: darkColorScheme.surfaceContainerHighest,
         hintStyle: TextStyle(
-          color: darkColorScheme.onSurfaceVariant.withOpacity(0.7),
+          color: darkColorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: darkColorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: darkColorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             width: 1,
           ),
         ),

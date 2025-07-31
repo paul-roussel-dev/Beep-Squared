@@ -1025,12 +1025,14 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
     );
 
     if (confirmed == true) {
-      Navigator.pop(context); // Fermer le dialogue de sélection
+      if (mounted) {
+        Navigator.pop(context); // Fermer le dialogue de sélection
+      }
 
       final success = await RingtoneService.instance.deleteCustomRingtone(
         ringtonePath,
       );
-      if (success) {
+      if (success && mounted) {
         if (_selectedSoundPath == ringtonePath) {
           setState(() {
             // Revenir au premier ringtone (Alarm Clock)

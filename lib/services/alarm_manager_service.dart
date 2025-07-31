@@ -51,8 +51,8 @@ class AlarmManagerService {
         context: _context!,
         barrierDismissible: false,
         useRootNavigator: true,
-        builder: (context) => WillPopScope(
-          onWillPop: () async => false, // Prevent back button
+        builder: (context) => PopScope(
+          canPop: false, // Prevent back button
           child: AlarmScreen(
             alarm: alarm,
             onDismiss: () => _dismissAlarm(alarm),
