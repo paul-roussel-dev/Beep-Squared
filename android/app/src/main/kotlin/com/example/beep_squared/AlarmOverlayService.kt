@@ -398,7 +398,7 @@ class AlarmOverlayService : Service() {
                 })
 
                 // Clear Button
-                addView(createActionButton("CLEAR", Color.parseColor("#F44336")) {
+                addView(createActionButton("CLEAR", Color.parseColor("#bb3329")) {
                     clearInput()
                 })
             })

@@ -115,9 +115,9 @@ class _AlarmScreenState extends State<AlarmScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A237E).withValues(alpha:0.95),
-                const Color(0xFF3F51B5).withValues(alpha:0.9),
-                const Color(0xFF5C6BC0).withValues(alpha:0.85),
+                const Color(0xFF1A237E).withValues(alpha: 0.95),
+                const Color(0xFF3F51B5).withValues(alpha: 0.9),
+                const Color(0xFF5C6BC0).withValues(alpha: 0.85),
                 Colors.black87,
               ],
               stops: const [0.0, 0.3, 0.7, 1.0],
@@ -159,9 +159,12 @@ class _AlarmScreenState extends State<AlarmScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha:0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha:0.2), width: 1),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
           child: Column(
             children: [
@@ -177,7 +180,7 @@ class _AlarmScreenState extends State<AlarmScreen>
               Text(
                 _formatDate(now),
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha:0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 18,
                   fontWeight: FontWeight.w400,
                 ),
@@ -193,12 +196,15 @@ class _AlarmScreenState extends State<AlarmScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha:0.2), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -209,7 +215,7 @@ class _AlarmScreenState extends State<AlarmScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha:0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.alarm, color: Colors.white, size: 32),
@@ -228,7 +234,7 @@ class _AlarmScreenState extends State<AlarmScreen>
           Text(
             'Scheduled for ${widget.alarm.formattedTime}',
             style: TextStyle(
-              color: Colors.white.withValues(alpha:0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
               fontWeight: FontWeight.w400,
             ),
@@ -252,20 +258,20 @@ class _AlarmScreenState extends State<AlarmScreen>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  Colors.red.withValues(alpha:0.9),
-                  Colors.red.withValues(alpha:0.7),
-                  Colors.red.withValues(alpha:0.4),
+                  Colors.red.withValues(alpha: 0.9),
+                  Colors.red.withValues(alpha: 0.7),
+                  Colors.red.withValues(alpha: 0.4),
                 ],
                 stops: const [0.3, 0.7, 1.0],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.red.withValues(alpha:0.6),
+                  color: Colors.red.withValues(alpha: 0.6),
                   blurRadius: 30,
                   spreadRadius: 10,
                 ),
                 BoxShadow(
-                  color: Colors.red.withValues(alpha:0.3),
+                  color: Colors.red.withValues(alpha: 0.3),
                   blurRadius: 60,
                   spreadRadius: 20,
                 ),
@@ -289,10 +295,10 @@ class _AlarmScreenState extends State<AlarmScreen>
           child: ElevatedButton(
             onPressed: _handleDismiss,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.withValues(alpha:0.9),
+              backgroundColor: Colors.green.withValues(alpha: 0.9),
               foregroundColor: Colors.white,
               elevation: 8,
-              shadowColor: Colors.green.withValues(alpha:0.4),
+              shadowColor: Colors.green.withValues(alpha: 0.4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(35),
               ),
@@ -320,7 +326,10 @@ class _AlarmScreenState extends State<AlarmScreen>
             onPressed: _handleSnooze,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha:0.7), width: 2),
+              side: BorderSide(
+                color: Colors.white.withValues(alpha: 0.7),
+                width: 2,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),

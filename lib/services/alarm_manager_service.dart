@@ -6,15 +6,15 @@ import '../services/alarm_scheduler_service.dart';
 import '../services/alarm_monitor_service.dart';
 
 /// Service for managing active alarms and showing alarm screen
-/// 
+///
 /// This service handles the display of the alarm screen when an alarm
 /// is triggered and manages alarm dismissal and snoozing.
 class AlarmManagerService {
   static AlarmManagerService? _instance;
-  
+
   /// Private constructor to prevent direct instantiation
   AlarmManagerService._();
-  
+
   /// Singleton instance accessor
   static AlarmManagerService get instance {
     _instance ??= AlarmManagerService._();
@@ -35,16 +35,18 @@ class AlarmManagerService {
       debugPrint('No context available for alarm screen');
       return;
     }
-    
+
     if (_isAlarmActive) {
-      debugPrint('Alarm already active, ignoring new trigger for: ${alarm.label}');
+      debugPrint(
+        'Alarm already active, ignoring new trigger for: ${alarm.label}',
+      );
       return;
     }
-    
+
     _isAlarmActive = true;
-    
+
     debugPrint('Showing alarm screen for: ${alarm.label}');
-    
+
     try {
       // Show alarm screen as fullscreen dialog
       await showDialog(
@@ -70,10 +72,10 @@ class AlarmManagerService {
   /// Dismiss the alarm
   void _dismissAlarm(Alarm alarm) {
     if (_context == null) return;
-    
+
     _isAlarmActive = false;
     Navigator.of(_context!).pop();
-    
+
     // For recurring alarms, mark as triggered today to prevent repeat
     if (alarm.isRecurring) {
       _markAlarmTriggeredToday(alarm);
@@ -86,8 +88,9 @@ class AlarmManagerService {
   /// Mark alarm as triggered today to prevent repeat
   void _markAlarmTriggeredToday(Alarm alarm) {
     final now = DateTime.now();
-    final alarmKey = '${alarm.id}_${now.year}_${now.month}_${now.day}_${alarm.time.hour}_${alarm.time.minute}';
-    
+    final alarmKey =
+        '${alarm.id}_${now.year}_${now.month}_${now.day}_${alarm.time.hour}_${alarm.time.minute}';
+
     // Add to monitor service's triggered alarms to prevent repeat today
     AlarmMonitorService.instance.markAlarmTriggered(alarmKey);
   }
@@ -95,10 +98,10 @@ class AlarmManagerService {
   /// Snooze the alarm
   void _snoozeAlarm(Alarm alarm) {
     if (_context == null) return;
-    
+
     _isAlarmActive = false;
     Navigator.of(_context!).pop();
-    
+
     // Schedule snooze alarm
     _scheduleSnoozeAlarm(alarm);
   }
@@ -111,8 +114,10 @@ class AlarmManagerService {
 
   /// Schedule a snooze alarm
   Future<void> _scheduleSnoozeAlarm(Alarm alarm) async {
-    final snoozeTime = DateTime.now().add(Duration(minutes: alarm.snoozeMinutes));
-    
+    final snoozeTime = DateTime.now().add(
+      Duration(minutes: alarm.snoozeMinutes),
+    );
+
     // Create a temporary snooze alarm - don't save to storage
     final snoozeAlarm = alarm.copyWith(
       id: '${alarm.id}_snooze_${DateTime.now().millisecondsSinceEpoch}',
@@ -120,9 +125,12 @@ class AlarmManagerService {
       time: snoozeTime, // Use the actual snooze time
       weekDays: [], // Snooze is one-time only
     );
-    
+
     // Schedule it directly without saving to storage
-    await AlarmSchedulerService.instance.scheduleSnoozeAlarm(snoozeAlarm, snoozeTime);
+    await AlarmSchedulerService.instance.scheduleSnoozeAlarm(
+      snoozeAlarm,
+      snoozeTime,
+    );
   }
 
   /// Check if an alarm is currently active
@@ -135,7 +143,7 @@ class AlarmManagerService {
       (a) => a.id == alarmId,
       orElse: () => throw Exception('Alarm not found: $alarmId'),
     );
-    
+
     if (alarm.isEnabled) {
       await showAlarmScreen(alarm);
     }
@@ -172,7 +180,7 @@ class AlarmManagerService {
   Future<void> initialize() async {
     // Request notification permissions
     await AlarmSchedulerService.instance.requestPermissions();
-    
+
     // Reschedule all alarms on app start
     await AlarmSchedulerService.instance.rescheduleAllAlarms();
   }

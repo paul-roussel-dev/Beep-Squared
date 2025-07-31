@@ -178,7 +178,9 @@ class AppTheme {
                 0xFF1565C0,
               ).withValues(alpha: 0.1); // Bleu transparent
             }
-            return const Color(0xFF757575).withValues(alpha: 0.1); // Gris transparent
+            return const Color(
+              0xFF757575,
+            ).withValues(alpha: 0.1); // Gris transparent
           }
           return null;
         }),
