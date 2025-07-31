@@ -53,6 +53,11 @@ class AlarmOverlayService : Service() {
     // Store current math settings for random button
     private var currentMathDifficulty: String = "easy"
     private var currentMathOperations: String = "mixed"
+    
+    // Store current alarm settings for snooze
+    private var currentAlarmId: String = ""
+    private var currentLabel: String = ""
+    private var currentUnlockMethod: String = "simple"
 
     companion object {
         private const val SNOOZE_DURATION_MINUTES = 5
@@ -99,15 +104,15 @@ class AlarmOverlayService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("AlarmOverlayService", "Modern Service started")
 
-        val alarmId = intent?.getStringExtra("alarmId") ?: "unknown"
-        val label = intent?.getStringExtra("label") ?: "Alarm"
-        val unlockMethod = intent?.getStringExtra("unlockMethod") ?: "simple"
-        val mathDifficulty = intent?.getStringExtra("mathDifficulty") ?: "easy"
-        val mathOperations = intent?.getStringExtra("mathOperations") ?: "mixed"
+        currentAlarmId = intent?.getStringExtra("alarmId") ?: "unknown"
+        currentLabel = intent?.getStringExtra("label") ?: "Alarm"
+        currentUnlockMethod = intent?.getStringExtra("unlockMethod") ?: "simple"
+        currentMathDifficulty = intent?.getStringExtra("mathDifficulty") ?: "easy"
+        currentMathOperations = intent?.getStringExtra("mathOperations") ?: "mixed"
 
         createSnoozeNotificationChannel()
         startAlarmSound()
-        showModernAlarmOverlay(alarmId, label, unlockMethod, mathDifficulty, mathOperations)
+        showModernAlarmOverlay(currentAlarmId, currentLabel, currentUnlockMethod, currentMathDifficulty, currentMathOperations)
 
         return START_NOT_STICKY
     }
@@ -774,8 +779,10 @@ class AlarmOverlayService : Service() {
             val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val intent = Intent(this, AlarmOverlayService::class.java).apply {
                 putExtra("alarmId", alarmId)
-                putExtra("label", "Snoozed Alarm")
-                putExtra("unlockMethod", "simple")
+                putExtra("label", currentLabel)
+                putExtra("unlockMethod", currentUnlockMethod)
+                putExtra("mathDifficulty", currentMathDifficulty)
+                putExtra("mathOperations", currentMathOperations)
             }
             
             val pendingIntent = PendingIntent.getService(
@@ -791,7 +798,7 @@ class AlarmOverlayService : Service() {
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, snoozeTime, pendingIntent)
             }
 
-            Log.d("AlarmOverlayService", "Snooze alarm scheduled for: ${Date(snoozeTime)}")
+            Log.d("AlarmOverlayService", "Snooze alarm scheduled for: ${Date(snoozeTime)} with unlock method: $currentUnlockMethod")
         } catch (e: Exception) {
             Log.e("AlarmOverlayService", "Error scheduling snooze alarm", e)
         }

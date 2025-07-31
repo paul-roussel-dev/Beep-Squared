@@ -51,8 +51,9 @@ class AlarmActionReceiver : BroadcastReceiver() {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val snoozeIntent = Intent(context, AlarmOverlayService::class.java).apply {
                 putExtra("alarmId", alarmId)
-                putExtra("label", "Snoozed Alarm")
-                putExtra("unlockMethod", "simple")
+                // We need to match exactly what was used when scheduling
+                // Since we don't have access to the original parameters here,
+                // we'll create a generic intent that matches the scheduled one
             }
             
             val pendingIntent = PendingIntent.getService(

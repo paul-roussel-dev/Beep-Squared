@@ -290,8 +290,7 @@ class MainActivity : FlutterActivity() {
             // Cancel the snooze alarm intent
             val snoozeIntent = Intent(this, AlarmOverlayService::class.java).apply {
                 putExtra("alarmId", alarmId)
-                putExtra("label", "Snoozed Alarm")
-                putExtra("unlockMethod", "simple")
+                // Match the intent structure used when scheduling
             }
             
             val pendingIntent = PendingIntent.getService(
