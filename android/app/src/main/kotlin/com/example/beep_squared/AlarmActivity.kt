@@ -263,7 +263,7 @@ class AlarmActivity : ComponentActivity() {
     
     private fun createMinimalView(): View {
         return TextView(this).apply {
-            text = "⏰ ALARM - TAP TO DISMISS"
+            text = "⏰ ALARM - SLIDE TO DISMISS"
             textSize = 28f
             setTextColor(Color.WHITE)
             

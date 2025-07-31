@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 
 /// Unlock method for dismissing an alarm
 enum AlarmUnlockMethod {
-  /// Simple tap to dismiss
-  simple('Simple', 'Tap to dismiss'),
+  /// Simple slide to dismiss
+  simple('Simple', 'Slide to dismiss'),
 
   /// Solve math problem
   math('Math', 'Solve math problem');

@@ -516,10 +516,26 @@ class AlarmOverlayService : Service() {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
+            setPadding(dpToPx(20), dpToPx(20), dpToPx(20), dpToPx(20))
             
+            // Background card
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#1A237E"))
+                cornerRadius = dpToPx(16).toFloat()
+                setStroke(dpToPx(2), Color.parseColor("#3F51B5"))
+            }
+
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dpToPx(16)
+            }
+            
+            // Title
             addView(TextView(this@AlarmOverlayService).apply {
-                text = "Tap to dismiss alarm"
-                textSize = 18f
+                text = "Slide to dismiss alarm"
+                textSize = 16f
                 setTextColor(Color.parseColor("#BBDEFB"))
                 gravity = Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(
@@ -530,26 +546,289 @@ class AlarmOverlayService : Service() {
                 }
             })
 
-            // Action Buttons
-            addView(LinearLayout(this@AlarmOverlayService).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER
-                
-                // Dismiss Button
-                addView(createActionButton("DISMISS ALARM", Color.parseColor("#4CAF50")) {
-                    dismissAlarm(alarmId)
-                })
-
-                // Space
-                addView(View(this@AlarmOverlayService).apply {
-                    layoutParams = LinearLayout.LayoutParams(dpToPx(16), 0)
-                })
-
-                // Snooze Button
-                addView(createActionButton("SNOOZE", Color.parseColor("#FF7043")) {
-                    snoozeAlarm(alarmId)
-                })
+            // Slider Container
+            addView(createSliderContainer(alarmId))
+            
+            // Space between slider and snooze button
+            addView(View(this@AlarmOverlayService).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dpToPx(20)
+                )
             })
+
+            // Snooze Button
+            addView(createSnoozeButton(alarmId))
+        }
+    }
+
+    private fun createSliderContainer(alarmId: String): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4))
+            
+            // Slider track background
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#0D47A1"))
+                cornerRadius = dpToPx(30).toFloat()
+                setStroke(dpToPx(2), Color.parseColor("#1976D2"))
+            }
+            
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(64)
+            ).apply {
+                bottomMargin = dpToPx(8)
+            }
+
+            // Create slider track with animated button
+            addView(createInteractiveSlider(alarmId))
+        }
+    }
+
+    private fun createInteractiveSlider(alarmId: String): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+
+            // Slider track with touch handling
+            val sliderTrack = LinearLayout(this@AlarmOverlayService).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL or Gravity.LEFT
+                setPadding(dpToPx(8), 0, dpToPx(8), 0)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            }
+
+            // Draggable slider button (positioned at LEFT, slides to RIGHT)
+            val sliderButton = TextView(this@AlarmOverlayService).apply {
+                text = "➤"
+                textSize = 24f
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                background = GradientDrawable().apply {
+                    colors = intArrayOf(
+                        Color.parseColor("#4CAF50"),
+                        Color.parseColor("#66BB6A")
+                    )
+                    orientation = GradientDrawable.Orientation.LEFT_RIGHT
+                    cornerRadius = dpToPx(26).toFloat()
+                    setStroke(dpToPx(2), Color.parseColor("#81C784"))
+                }
+                layoutParams = LinearLayout.LayoutParams(
+                    dpToPx(56),
+                    dpToPx(56)
+                ).apply {
+                    leftMargin = dpToPx(4)  // Start from left
+                }
+            }
+
+            // Right section with text (takes remaining space)
+            val rightSection = LinearLayout(this@AlarmOverlayService).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dpToPx(16), 0, dpToPx(16), 0)
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1f
+                )
+
+                // Text only (no icon)
+                addView(TextView(this@AlarmOverlayService).apply {
+                    text = "Slide to dismiss"
+                    textSize = 14f
+                    setTextColor(Color.parseColor("#64B5F6"))
+                    gravity = Gravity.CENTER
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                })
+            }
+
+            // Add button first (left), then text section (right)
+            sliderTrack.addView(sliderButton)
+            sliderTrack.addView(rightSection)
+            addView(sliderTrack)
+
+            // Implement touch sliding functionality
+            setupSliderTouchHandling(sliderTrack, sliderButton, alarmId)
+        }
+    }
+
+    private fun setupSliderTouchHandling(
+        sliderTrack: LinearLayout, 
+        sliderButton: TextView, 
+        alarmId: String
+    ) {
+        var initialX = 0f
+        var initialTouchX = 0f
+        val slideThreshold = dpToPx(150) // Minimum slide distance to trigger
+        
+        sliderButton.setOnTouchListener { view, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    initialX = view.x
+                    initialTouchX = event.rawX
+                    
+                    // Visual feedback - slight scale
+                    view.animate()
+                        .scaleX(1.05f)
+                        .scaleY(1.05f)
+                        .setDuration(100)
+                    
+                    Log.d("AlarmOverlayService", "Slider touch DOWN at: $initialTouchX, view.x: $initialX")
+                    true
+                }
+                
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    val deltaX = event.rawX - initialTouchX
+                    val trackWidth = sliderTrack.width
+                    val buttonWidth = view.width
+                    val maxSlideDistance = trackWidth - buttonWidth - dpToPx(16) // Account for padding
+                    
+                    // Ensure we have valid dimensions
+                    if (trackWidth > 0 && buttonWidth > 0) {
+                        // Only allow rightward movement (positive deltaX)
+                        val newX = Math.max(0f, Math.min(deltaX, maxSlideDistance.toFloat()))
+                        view.x = initialX + newX
+                        
+                        // Calculate slide progress
+                        val slideProgress = if (maxSlideDistance > 0) newX / maxSlideDistance else 0f
+                        
+                        Log.d("AlarmOverlayService", "Slider MOVE: deltaX=$deltaX, newX=$newX, progress=$slideProgress, maxDistance=$maxSlideDistance")
+                        
+                        // Change button appearance as it slides
+                        if (slideProgress > 0.6f) {
+                            // Near completion - change to success color
+                            view.background = GradientDrawable().apply {
+                                colors = intArrayOf(
+                                    Color.parseColor("#2E7D32"),
+                                    Color.parseColor("#4CAF50")
+                                )
+                                orientation = GradientDrawable.Orientation.LEFT_RIGHT
+                                cornerRadius = dpToPx(26).toFloat()
+                                setStroke(dpToPx(2), Color.parseColor("#66BB6A"))
+                            }
+                            (view as TextView).text = "✓"
+                        } else {
+                            // Normal state
+                            view.background = GradientDrawable().apply {
+                                colors = intArrayOf(
+                                    Color.parseColor("#4CAF50"),
+                                    Color.parseColor("#66BB6A")
+                                )
+                                orientation = GradientDrawable.Orientation.LEFT_RIGHT
+                                cornerRadius = dpToPx(26).toFloat()
+                                setStroke(dpToPx(2), Color.parseColor("#81C784"))
+                            }
+                            (view as TextView).text = "➤"
+                        }
+                    }
+                    true
+                }
+                
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                    val deltaX = event.rawX - initialTouchX
+                    
+                    Log.d("AlarmOverlayService", "Slider touch UP: deltaX=$deltaX, threshold=$slideThreshold")
+                    
+                    // Reset scale
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(100)
+                    
+                    if (deltaX >= slideThreshold) {
+                        // Slide completed - dismiss alarm
+                        Log.d("AlarmOverlayService", "Slider threshold reached - dismissing alarm")
+                        view.animate()
+                            .x(sliderTrack.width - view.width - dpToPx(8).toFloat())
+                            .setDuration(200)
+                            .withEndAction {
+                                dismissAlarm(alarmId)
+                            }
+                    } else {
+                        // Slide not completed - snap back to left position
+                        Log.d("AlarmOverlayService", "Slider threshold not reached - snapping back")
+                        view.animate()
+                            .x(dpToPx(4).toFloat()) // Back to left position
+                            .setDuration(300)
+                            .withEndAction {
+                                // Reset appearance
+                                view.background = GradientDrawable().apply {
+                                    colors = intArrayOf(
+                                        Color.parseColor("#4CAF50"),
+                                        Color.parseColor("#66BB6A")
+                                    )
+                                    orientation = GradientDrawable.Orientation.LEFT_RIGHT
+                                    cornerRadius = dpToPx(26).toFloat()
+                                    setStroke(dpToPx(2), Color.parseColor("#81C784"))
+                                }
+                                (view as TextView).text = "➤"
+                            }
+                    }
+                    true
+                }
+                
+                else -> false
+            }
+        }
+        
+        // Add fallback click functionality for testing
+        sliderButton.setOnClickListener {
+            Log.d("AlarmOverlayService", "Slider button clicked - dismissing alarm (fallback)")
+            dismissAlarm(alarmId)
+        }
+    }
+
+    private fun createSnoozeButton(alarmId: String): Button {
+        return Button(this).apply {
+            text = "💤 SNOOZE ($SNOOZE_DURATION_MINUTES MIN)"
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            
+            background = GradientDrawable().apply {
+                colors = intArrayOf(
+                    Color.parseColor("#FF7043"),
+                    Color.parseColor("#FF8A65")
+                )
+                orientation = GradientDrawable.Orientation.LEFT_RIGHT
+                cornerRadius = dpToPx(12).toFloat()
+                setStroke(dpToPx(2), Color.parseColor("#FFAB91"))
+            }
+
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(56)
+            )
+
+            // Add press animation
+            setOnClickListener {
+                animate()
+                    .scaleX(0.95f)
+                    .scaleY(0.95f)
+                    .setDuration(100)
+                    .withEndAction {
+                        animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(100)
+                            .withEndAction {
+                                snoozeAlarm(alarmId)
+                            }
+                    }
+            }
         }
     }
 
