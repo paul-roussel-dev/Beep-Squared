@@ -97,6 +97,11 @@ class MainActivity : FlutterActivity() {
                         cancelAlarm(alarmId)
                         result.success(true)
                     }
+                    "cancelSnoozeAlarm" -> {
+                        val alarmId = call.argument<String>(AlarmConfig.EXTRA_ALARM_ID)!!
+                        cancelSnoozeAlarm(alarmId)
+                        result.success(true)
+                    }
                     "cancelAllAlarms" -> {
                         cancelAllAlarms()
                         result.success(true)
@@ -270,6 +275,42 @@ class MainActivity : FlutterActivity() {
             
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error triggering modern alarm: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Cancel a snoozed alarm
+     */
+    private fun cancelSnoozeAlarm(alarmId: String) {
+        try {
+            println("Canceling snooze alarm: $alarmId")
+            
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            
+            // Cancel the snooze alarm intent
+            val snoozeIntent = Intent(this, AlarmOverlayService::class.java).apply {
+                putExtra("alarmId", alarmId)
+                putExtra("label", "Snoozed Alarm")
+                putExtra("unlockMethod", "simple")
+            }
+            
+            val pendingIntent = PendingIntent.getService(
+                this, 
+                alarmId.hashCode(), 
+                snoozeIntent, 
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            alarmManager.cancel(pendingIntent)
+            
+            // Also cancel the snooze notification
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(AlarmOverlayService.SNOOZE_NOTIFICATION_ID)
+            
+            println("Snooze alarm cancelled: $alarmId")
+        } catch (e: Exception) {
+            println("Error canceling snooze alarm: ${e.message}")
+            e.printStackTrace()
         }
     }
 }

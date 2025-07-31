@@ -171,6 +171,19 @@ class AndroidAlarmService {
     }
   }
 
+  /// Cancel a snoozed alarm
+  Future<void> cancelSnoozeAlarm(String alarmId) async {
+    if (!_isInitialized) await initialize();
+
+    try {
+      await _channel.invokeMethod('cancelSnoozeAlarm', {'alarmId': alarmId});
+      debugPrint('Android snooze alarm cancelled: $alarmId');
+    } catch (e) {
+      debugPrint('Error cancelling Android snooze alarm: $e');
+      rethrow;
+    }
+  }
+
   /// Cancel all alarms
   Future<void> cancelAllAlarms() async {
     if (!_isInitialized) await initialize();

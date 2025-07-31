@@ -59,6 +59,13 @@
             </intent-filter>
         </receiver>
         
+        <!-- Action receiver for handling notification actions -->
+        <receiver android:name=".AlarmActionReceiver" android:enabled="true" android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.beep_squared.ACTION_CANCEL_SNOOZE" />
+            </intent-filter>
+        </receiver>
+        
         <!-- Overlay service for system-level alarm display -->
         <service 
             android:name=".AlarmOverlayService" 

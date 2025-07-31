@@ -56,8 +56,8 @@ class AlarmOverlayService : Service() {
 
     companion object {
         private const val SNOOZE_DURATION_MINUTES = 5
-        private const val SNOOZE_NOTIFICATION_CHANNEL_ID = "snooze_notification_channel"
-        private const val SNOOZE_NOTIFICATION_ID = 1001
+        const val SNOOZE_NOTIFICATION_CHANNEL_ID = "snooze_notification_channel"
+        const val SNOOZE_NOTIFICATION_ID = 1001
 
         fun showAlarmOverlay(
             context: Context,
@@ -802,18 +802,37 @@ class AlarmOverlayService : Service() {
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
             val snoozeTimeString = timeFormat.format(Date(snoozeTime))
 
+            // Create cancel snooze action
+            val cancelSnoozeIntent = Intent(this, AlarmActionReceiver::class.java).apply {
+                action = AlarmConfig.ACTION_CANCEL_SNOOZE
+                putExtra(AlarmConfig.EXTRA_ALARM_ID, alarmId)
+            }
+            val cancelSnoozePendingIntent = PendingIntent.getBroadcast(
+                this,
+                alarmId.hashCode() + 1000, // Unique request code
+                cancelSnoozeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
             val notification = NotificationCompat.Builder(this, SNOOZE_NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setContentTitle("Alarm Snoozed")
                 .setContentText("Next alarm at $snoozeTimeString")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
+                .addAction(
+                    android.R.drawable.ic_menu_close_clear_cancel,
+                    "Cancel",
+                    cancelSnoozePendingIntent
+                )
+                .setStyle(NotificationCompat.BigTextStyle()
+                    .bigText("Next alarm at $snoozeTimeString\n\nTap 'Cancel' to remove this temporary alarm."))
                 .build()
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.notify(SNOOZE_NOTIFICATION_ID, notification)
 
-            Log.d("AlarmOverlayService", "Snooze notification posted for $snoozeTimeString")
+            Log.d("AlarmOverlayService", "Snooze notification posted for $snoozeTimeString with cancel action")
         } catch (e: Exception) {
             Log.e("AlarmOverlayService", "Error posting snooze notification", e)
         }

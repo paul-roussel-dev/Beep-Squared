@@ -25,6 +25,7 @@ object AlarmConfig {
     // Actions
     const val ACTION_SNOOZE = "snooze"
     const val ACTION_DISMISS = "dismiss"
+    const val ACTION_CANCEL_SNOOZE = "cancel_snooze"
     
     // Default values
     const val DEFAULT_SOUND_PATH = "default"
