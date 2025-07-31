@@ -1,22 +1,16 @@
-# 🔙 Amélioration de la Navigation - Beep Squared
+# 🔙 Navigation
 
-## Fonctionnalités de Navigation Ajoutées
+## 🏠 Écran d'Accueil
+- **Confirmation de sortie** : "Are you sure you want to exit?"
+- **Bouton back** : Intercepté pour confirmation
 
-### 🏠 **Écran d'Accueil (HomeScreen)**
-- **Confirmation de sortie** : Demande confirmation avant de quitter l'application
-- **Gestion du bouton back** : Intercepte le bouton back du système
-- **Message personnalisé** : "Are you sure you want to exit Beep Squared?"
+## ⚙️ Écran d'Ajout d'Alarme  
+- **Détection des changements** : Vérification automatique
+- **Confirmation intelligente** : Seulement si modifications non sauvegardées
 
-### ⚙️ **Écran d'Ajout d'Alarme (AddAlarmScreen)**
-- **Détection des changements** : Vérifie si l'utilisateur a fait des modifications
-- **Confirmation de sortie** : Demande confirmation si des changements non sauvegardés existent
-- **Gestion intelligente** : Pas de confirmation si aucun changement n'a été fait
-
-### 🎵 **Sélection de Sonnerie Améliorée**
-- **Interface améliorée** : Utilise AlertDialog au lieu de SimpleDialog
-- **Bouton Cancel** : Bouton Cancel explicite pour fermer sans sélection
-- **Navigation fluide** : Retour au sélecteur après import/suppression
-- **Gestion des erreurs** : Messages d'erreur appropriés
+## 🎵 Sélection de Sonnerie
+- **AlertDialog** : Interface améliorée avec bouton Cancel
+- **Navigation fluide** : Retour automatique après actions
 
 ### 🗑️ **Suppression de Sonnerie**
 - **Confirmation de suppression** : Demande confirmation avant suppression

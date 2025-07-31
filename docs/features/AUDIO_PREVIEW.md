@@ -1,50 +1,30 @@
-# 🎵 Prévisualisation Audio - Beep Squared
+# 🎵 Prévisualisation Audio
 
-## Fonctionnalité
+## 🎯 Fonctionnalité
 
-### 🎧 **Aperçu des Sonneries**
-L'application permet maintenant d'écouter un aperçu de chaque sonnerie avant de la sélectionner pour une alarme.
+Écoute des sonneries avant sélection avec contrôles intuitifs et limitation automatique.
 
-## Interface Utilisateur
+## 🎮 Interface
 
-### 🎮 **Contrôles Audio**
-- **Bouton Play (▶️)** : Lance la prévisualisation de la sonnerie
-- **Bouton Stop (⏹️)** : Arrête la prévisualisation en cours
-- **Indication visuelle** : "♪ Playing..." s'affiche pendant la lecture
-- **Tooltips** : "Play preview" / "Stop preview" pour l'accessibilité
+### Contrôles
+- **▶️ Play** : Lance l'aperçu (max 3s)
+- **⏹️ Stop** : Arrêt manuel
+- **Feedback** : "♪ Playing..." pendant lecture
 
-### 🎨 **Design**
-- **Couleurs intuitives** : Vert pour play, rouge pour stop
-- **Feedback immédiat** : Changement d'icône instantané
-- **Intégration fluide** : Boutons intégrés dans chaque ligne de sonnerie
-
-## Comportement
-
-### ⏱️ **Durée de Prévisualisation**
-- **Limitation automatique** : Maximum 3 secondes par aperçu
-- **Arrêt manuel** : Possibilité d'arrêter avant la fin
+### Comportement
 - **Une seule sonnerie** : Arrêt automatique de la précédente
+- **Sélection** : Arrêt auto + fermeture dialogue
+- **Fermeture** : Cleanup automatique
 
-### 🔄 **Gestion des États**
-- **Sélection de sonnerie** : Arrêt automatique + fermeture dialogue
-- **Fermeture dialogue** : Arrêt automatique de tout audio
-- **Changement de sonnerie** : Arrêt de la précédente avant nouvelle lecture
+## 🎵 Sonneries Supportées
 
-## Types de Sonneries Supportées
+- **Assets intégrés** : 7 sonneries MP3 pré-installées
+- **Fichiers locaux** : Import utilisateur (futur)
+- **Fallback** : Beep système si erreur
 
-### 📱 **Sonneries Intégrées**
-- **Format** : Assets (MP3) intégrés dans l'application
-- **Lecture** : Via `AssetSource` d'audioplayers
-- **Exemples** : Alarm Clock, Bright Electronic, Melody Ring, etc.
+## ⚙️ Implémentation
 
-### 🎵 **Sonneries Personnalisées**
-- **Format** : Fichiers locaux importés par l'utilisateur
-- **Lecture** : Via `DeviceFileSource` d'audioplayers
-- **Vérification** : Existence du fichier avant lecture
-
-### 🔔 **Son Par Défaut**
-- **Comportement** : Joue un beep système (SystemSoundType.click)
-- **Fallback** : Utilisé en cas d'erreur de lecture
+Service `AudioPreviewService` avec gestion mémoire automatique et cleanup des ressources.
 
 ## Architecture Technique
 

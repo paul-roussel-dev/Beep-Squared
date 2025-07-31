@@ -1,51 +1,35 @@
-# Système de Défi Mathématique - Version Unifiée
+# 🧮 Défis Mathématiques
 
-## Vue d'ensemble
+## 🎯 Vue d'ensemble
 
-Le système de défi mathématique unifié permet aux utilisateurs de configurer des alarmes avec un seul type "Math" personnalisable. Les utilisateurs peuvent ajuster la difficulté et les types d'opérations selon leurs préférences.
+Système de déverrouillage d'alarme par défis mathématiques avec 3 niveaux de difficulté et 4 types d'opérations.
 
-## Types de Déverrouillage
+## 🔓 Types de Déverrouillage
 
-### 1. Simple
-
-- Déverrouillage instantané avec bouton "DISMISS"
+### Simple
+- Bouton "DISMISS" direct
 - Aucun défi requis
 
-### 2. Math (Personnalisable)
+### Math Challenge
+- **3 niveaux** : Easy (1-50), Medium (1-100), Hard (1-200)
+- **4 opérations** : Addition, Soustraction, Multiplication, Mélangé
+- **Interface native** : Clavier numérique + boutons d'action
 
-- **3 niveaux de difficulté** :
+## 🎨 Interface
 
-  - **Facile** : Nombres 1-50, multiplications 1-10
-  - **Moyen** : Nombres 1-100, multiplications 1-12
-  - **Difficile** : Nombres 1-200, multiplications 1-15
-
-- **4 types d'opérations** :
-  - **Addition** : Uniquement des additions
-  - **Soustraction** : Uniquement des soustractions
-  - **Multiplication** : Uniquement des multiplications
-  - **Mélangé** : Mélange aléatoire des trois opérations
-
-## Interface Utilisateur Améliorée
-
-### Configuration des Alarmes
-
-1. **Sélection du type** : Simple ou Math
-2. **Si Math sélectionné** : Dialog de configuration automatique **compacte**
-3. **Interface optimisée** :
-   - **Difficulté** : 3 boutons horizontaux (Facile/Moyen/Difficile)
-   - **Opérations** : 4 boutons icônes `+` `−` `×` `±×`
-   - **Exemple en temps réel** : Aperçu du calcul selon la sélection
-   - **Pas d'overflow** : Interface adaptée aux petits écrans
+### Configuration
+- Sélection difficulté : 3 boutons compacts
+- Sélection opérations : 4 boutons icônes `+` `−` `×` `±×`
+- Aperçu en temps réel
 
 ### Écran d'Alarme
+- Question mathématique grand format
+- Clavier numérique moderne
+- Actions : `VALIDATE`, `SNOOZE`, `🎲` (aléatoire), `⌫` (effacer)
 
-- **Zone de défi** : Question mathématique en grand format
-- **Pavé numérique** : Interface moderne avec tous les chiffres
-- **Boutons d'action** :
-  - `C` : Effacer la saisie
-  - `⌫` : Supprimer le dernier chiffre
-  - `VALIDATE` : Valider la réponse
-  - `SNOOZE` : Reporter l'alarme (toujours disponible)
+## ⚙️ Implémentation
+
+Logique intégrée dans `AlarmOverlayService.kt` avec interface native full-screen pour fiabilité maximale.
 
 ## Exemples de Défis
 

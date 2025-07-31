@@ -1,33 +1,31 @@
-# 🎵 Système de Sonneries - Beep Squared
+# 🎵 Sonneries
 
-## Fonctionnalités
+## 🔊 Sonneries Intégrées
 
-### 🔊 Sonneries Intégrées
-L'application inclut 8 sonneries de haute qualité :
-- **Default** - Sonnerie système par défaut
-- **Alarm Clock** - Sonnerie d'alarme classique
-- **Bright Electronic** - Boucle électronique énergique
-- **Level Up** - Son de jeu amusant
+7 sonneries haute qualité incluses :
+- **Default** - Sonnerie système
+- **Alarm Clock** - Sonnerie classique
+- **Bright Electronic** - Boucle énergique
+- **Level Up** - Son de jeu
 - **Melody Ring** - Mélodie harmonieuse
-- **Original Phone** - Sonnerie de téléphone rétro
-- **Ringtone** - Sonnerie moderne standard
-- **Soft Ring** - Sonnerie douce et apaisante
+- **Original Phone** - Sonnerie rétro
+- **Soft Ring** - Sonnerie douce
 
-### 📱 Import de Sonneries Personnalisées
-- **Import facile** : Ajoutez vos propres fichiers audio
-- **Formats supportés** : MP3, WAV, M4A, et autres formats audio courants
-- **Stockage local** : Les sonneries sont copiées dans l'application
-- **Noms automatiques** : Noms d'affichage générés automatiquement
+## 📱 Fonctionnalités
 
-### 🗑️ Gestion des Sonneries
-- **Suppression** : Supprimez les sonneries personnalisées
-- **Persistance** : Les sonneries sont sauvegardées entre les sessions
-- **Nettoyage** : Suppression automatique des fichiers inutilisés
+### Prévisualisation
+- Écoute avant sélection (max 3s)
+- Contrôles play/stop intuitifs
+- Arrêt automatique à la sélection
 
-## Utilisation
+### Gestion
+- **Storage** : Assets intégrés dans l'application
+- **Formats** : MP3 optimisés
+- **Noms** : Affichage convivial automatique
 
-### Ajouter une Alarme avec Sonnerie
-1. Appuyez sur "+" pour créer une nouvelle alarme
+## ⚙️ Implémentation
+
+Service `RingtoneService` avec chargement lazy et cache des noms d'affichage.
 2. Dans la section "Settings", appuyez sur "Ringtone"
 3. Choisissez parmi les sonneries disponibles
 4. Ou appuyez sur "Import Custom Ringtone" pour ajouter la vôtre

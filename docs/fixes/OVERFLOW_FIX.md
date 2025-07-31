@@ -1,25 +1,15 @@
-# 🔧 Correction Overflow - Cartes d'Alarme
+# 🔧 Correction Overflow - UI
 
-## Problème Identifié
-L'interface de la liste des alarmes affichait un overflow sur les informations de l'alarme (jours, sonnerie, vibration) quand il y avait trop d'éléments pour la largeur disponible.
+## 🎯 Problème
+Interface des cartes d'alarme avec débordement sur petits écrans (jours + sonnerie + vibration).
 
-## Localisation du Problème
-- **Widget concerné** : `AlarmCard` dans `lib/widgets/alarm_card.dart`
-- **Section problématique** : Row dans le subtitle avec icônes et textes
-- **Éléments qui débordent** : "Every day 🎵 Soft Ring 📳"
+## ✅ Solution
+- **Row → Wrap** : Retour à la ligne automatique
+- **Groupes d'éléments** : Icône + texte ensemble
+- **Espacement adaptatif** : 8px horizontal, 4px vertical
 
-## Solutions Appliquées
-
-### � **Wrap au lieu de Row**
-- **Problème** : `Row` forçait tous les éléments sur une seule ligne
-- **Solution** : `Wrap` permet le retour à la ligne automatique
-- **Avantages** : Les éléments se répartissent sur plusieurs lignes si nécessaire
-
-### 📏 **Groupes d'Éléments**
-- **Jours** : Icône repeat + texte des jours dans une Row
-- **Sonnerie** : Icône music + nom de la sonnerie dans une Row
-- **Vibration** : Icône vibration seule
-- **Espacement** : `spacing: 8` horizontal, `runSpacing: 4` vertical
+## � Résultat
+Interface responsive qui s'adapte à toutes les tailles d'écran sans débordement.
 
 ### 🎯 **Code de la Solution**
 ```dart
