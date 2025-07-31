@@ -398,7 +398,7 @@ class AlarmOverlayService : Service() {
                 })
 
                 // Clear Button
-                addView(createActionButton("CLEAR", Color.parseColor("#FF5722")) {
+                addView(createActionButton("CLEAR", Color.parseColor("#F44336")) {
                     clearInput()
                 })
             })
@@ -451,9 +451,9 @@ class AlarmOverlayService : Service() {
                     // Empty space
                     addView(View(this@AlarmOverlayService).apply {
                         layoutParams = GridLayout.LayoutParams().apply {
-                            width = dpToPx(56) 
-                            height = dpToPx(56)
-                            setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3))
+                            width = dpToPx(70)   // Increased from 56 to match button size
+                            height = dpToPx(70)  // Increased from 56 to match button size
+                            setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4))  // Match button margins
                         }
                     })
                 } else {
@@ -466,7 +466,7 @@ class AlarmOverlayService : Service() {
     private fun createKeypadButton(text: String): Button {
         return Button(this).apply {
             this.text = text
-            textSize = 20f
+            textSize = 24f  // Increased from 20f for better readability
             setTextColor(Color.WHITE)
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             
@@ -477,9 +477,9 @@ class AlarmOverlayService : Service() {
             }
             
             layoutParams = GridLayout.LayoutParams().apply {
-                width = dpToPx(50)
-                height = dpToPx(50)
-                setMargins(dpToPx(3), dpToPx(3), dpToPx(3), dpToPx(3))
+                width = dpToPx(70)   // Increased from 50 for bigger buttons
+                height = dpToPx(70)  // Increased from 50 for bigger buttons
+                setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4))  // Slightly increased margins
             }
 
             setOnClickListener {
