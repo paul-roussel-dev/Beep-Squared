@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
+import '../utils/app_theme.dart';
 import '../models/alarm.dart';
 import '../services/alarm_service.dart';
 import '../services/alarm_scheduler_service.dart';
 import '../services/alarm_manager_service.dart';
 import '../widgets/alarm_card.dart';
 import 'add_alarm_screen.dart';
+import 'settings_screen.dart';
 
 /// Home screen displaying the list of alarms
 ///
@@ -120,6 +122,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return shouldExit ?? false;
   }
 
+  /// Navigate to settings screen
+  Future<void> _navigateToSettings() async {
+    final settingsChanged = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SettingsScreen(),
+      ),
+    );
+    
+    // If settings changed, trigger a complete rebuild to apply new theme
+    if (mounted && settingsChanged == true) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -142,7 +159,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           centerTitle: true,
           elevation: 0,
+          leading: _buildThemeModeIndicator(), // Theme indicator
           actions: [
+            // Settings button
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () => _navigateToSettings(),
+              tooltip: 'Paramètres',
+            ),
             if (_alarms.isNotEmpty)
               PopupMenuButton<String>(
                 onSelected: (value) {
@@ -469,5 +493,23 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     }
+  }
+
+  /// Build theme mode indicator showing day/evening status
+  Widget _buildThemeModeIndicator() {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Center(
+        child: Icon(
+          AppTheme.isEveningTime ? Icons.bedtime : Icons.wb_sunny,
+          size: 20,
+          color: Colors.white,
+        ),
+      ),
+    );
   }
 }

@@ -22,6 +22,7 @@ void main() async {
 }
 
 /// Main application widget following Material Design 3
+/// Features adaptive theming that changes from blue (day) to orange (evening)
 class BeepSquaredApp extends StatefulWidget {
   const BeepSquaredApp({super.key});
 
@@ -34,11 +35,26 @@ class BeepSquaredApp extends StatefulWidget {
 
   /// Get global navigator context
   static BuildContext? get globalContext => navigatorKey.currentContext;
+
+  /// Get current app instance to trigger theme reload
+  static _BeepSquaredAppState? get _currentInstance {
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      return context.findAncestorStateOfType<_BeepSquaredAppState>();
+    }
+    return null;
+  }
+
+  /// Trigger theme reload from anywhere in the app
+  static void reloadTheme() {
+    _currentInstance?._loadTheme();
+  }
 }
 
 class _BeepSquaredAppState extends State<BeepSquaredApp>
     with WidgetsBindingObserver {
   bool _servicesInitialized = false;
+  ThemeData? _currentTheme;
 
   @override
   void initState() {
@@ -48,6 +64,29 @@ class _BeepSquaredAppState extends State<BeepSquaredApp>
     // Initialize native services after the Flutter engine is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeNativeServices();
+      _loadTheme(); // Load theme from settings
+    });
+
+    // Set up periodic theme updates to check for day/evening transitions
+    _startThemeTimer();
+  }
+
+  /// Load theme from settings and update if needed
+  Future<void> _loadTheme() async {
+    final theme = await AppTheme.getAdaptiveThemeFromSettings();
+    if (mounted) {
+      setState(() {
+        _currentTheme = theme;
+      });
+    }
+  }
+
+  /// Start a timer to check for theme changes every minute
+  void _startThemeTimer() {
+    // Check theme every minute to handle day/evening transitions
+    Stream.periodic(const Duration(minutes: 1)).listen((_) {
+      // Reload theme from settings and trigger rebuild
+      _loadTheme();
     });
   }
 
@@ -107,9 +146,9 @@ class _BeepSquaredAppState extends State<BeepSquaredApp>
   Widget build(BuildContext context) {
     return MaterialApp(
       title: AppConstants.appName,
-      theme: AppTheme.lightTheme,
+      theme: _currentTheme ?? AppTheme.dayTheme, // Use loaded theme or default
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light, // Always use light mode for adaptive theming
       home: const HomeScreen(title: AppConstants.appName),
       navigatorKey: BeepSquaredApp.navigatorKey,
       debugShowCheckedModeBanner: false,
