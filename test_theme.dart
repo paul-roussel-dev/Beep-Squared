@@ -1,4 +1,4 @@
-import '../utils/app_theme.dart';
+import 'lib/utils/app_theme.dart';
 
 void main() {
   print('eveningStartHour: ${AppTheme.eveningStartHour}');

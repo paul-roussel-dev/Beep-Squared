@@ -4,10 +4,9 @@ import 'package:beep_squared/models/alarm.dart';
 
 void main() {
   group('AlarmSchedulerService Tests', () {
-    late AlarmSchedulerService schedulerService;
-
     setUp(() {
-      schedulerService = AlarmSchedulerService.instance;
+      // Initialize scheduler service for tests
+      AlarmSchedulerService.instance;
     });
 
     group('Grace Period Logic Tests', () {
@@ -36,10 +35,14 @@ void main() {
             vibrate: true,
           );
 
-          // Act & Assert
+          // Act & Assert - Test grace period logic
           final timeDifference = now.difference(alarmTime);
           expect(timeDifference.inSeconds, equals(30));
           expect(timeDifference.inMinutes, lessThan(2));
+
+          // Verify alarm properties for grace period test
+          expect(alarm.isEnabled, isTrue);
+          expect(alarm.time, equals(alarmTime));
 
           // Should be within grace period
           expect(timeDifference.inMinutes < 2, isTrue);
@@ -69,10 +72,14 @@ void main() {
           vibrate: true,
         );
 
-        // Act & Assert
+        // Act & Assert - Test late alarm logic
         final timeDifference = now.difference(alarmTime);
         expect(timeDifference.inMinutes, equals(4));
         expect(timeDifference.inMinutes >= 2, isTrue);
+
+        // Verify alarm properties for late alarm test
+        expect(alarm.isEnabled, isTrue);
+        expect(alarm.time, equals(alarmTime));
 
         // Should be outside grace period
         expect(timeDifference.inMinutes >= 2, isTrue);
@@ -101,9 +108,13 @@ void main() {
           vibrate: true,
         );
 
-        // Act & Assert
+        // Act & Assert - Test future alarm logic
         expect(alarmTime.isAfter(now), isTrue);
         expect(alarmTime.isBefore(now), isFalse);
+
+        // Verify alarm properties for future alarm test
+        expect(alarm.isEnabled, isTrue);
+        expect(alarm.time, equals(alarmTime));
       });
     });
 
@@ -124,10 +135,14 @@ void main() {
           vibrate: true,
         );
 
-        // Act & Assert
+        // Act & Assert - Test recurring alarm logic
         expect(recurringAlarm.isRecurring, isTrue);
         expect(recurringAlarm.weekDays.isNotEmpty, isTrue);
         expect(recurringAlarm.weekDays.contains(4), isTrue); // Friday = 4
+
+        // Verify timing context using now variable
+        expect(now.weekday, equals(5)); // Friday = 5 in DateTime.weekday
+        expect(alarmTime.isAfter(now), isTrue);
       });
 
       test('should identify one-time alarms correctly', () {
