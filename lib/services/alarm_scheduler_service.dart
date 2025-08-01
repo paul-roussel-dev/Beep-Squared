@@ -142,15 +142,43 @@ class AlarmSchedulerService {
     final int notificationId = alarm.id.hashCode;
     final now = DateTime.now();
 
-    // For one-time alarms, check if time has passed and skip scheduling
+    // For one-time alarms, check if time has significantly passed (more than 2 minutes)
+    // This allows users to activate alarms even if they're a few seconds late
     if (alarm.weekDays.isEmpty && alarm.time.isBefore(now)) {
-      debugPrint('Skipping one-time alarm in the past: ${alarm.time} vs $now');
-      // Optionally disable the alarm
-      final alarmService = AlarmService.instance;
-      final updatedAlarm = alarm.copyWith(isEnabled: false);
-      await alarmService.updateAlarm(updatedAlarm);
-      debugPrint('One-time alarm disabled: ${alarm.id}');
-      return;
+      final timeDifference = now.difference(alarm.time);
+
+      if (timeDifference.inMinutes >= 2) {
+        // Only disable if significantly in the past (2+ minutes)
+        debugPrint(
+          'Skipping one-time alarm significantly in the past: ${alarm.time} vs $now (${timeDifference.inMinutes}min ago)',
+        );
+        final alarmService = AlarmService.instance;
+        final updatedAlarm = alarm.copyWith(isEnabled: false);
+        await alarmService.updateAlarm(updatedAlarm);
+        debugPrint('One-time alarm disabled: ${alarm.id}');
+        return;
+      } else {
+        // If less than 2 minutes, schedule for immediate trigger (grace period)
+        debugPrint(
+          'Alarm is ${timeDifference.inSeconds}s late - scheduling immediate trigger with 5s grace period',
+        );
+        final immediateTime = now.add(const Duration(seconds: 5));
+
+        // Use Android native alarm for immediate trigger
+        try {
+          await AndroidAlarmService.instance.scheduleAlarm(
+            alarm,
+            immediateTime,
+          );
+          debugPrint(
+            'Native Android alarm scheduled with grace period: ${alarm.id} at $immediateTime',
+          );
+          return;
+        } catch (e) {
+          debugPrint('Error scheduling immediate Android alarm: $e');
+          // Continue with notification fallback
+        }
+      }
     }
 
     // Calculate next alarm time
@@ -302,15 +330,55 @@ class AlarmSchedulerService {
 
   /// Cancel an alarm notification
   Future<void> cancelAlarm(String alarmId) async {
-    final int notificationId = alarmId.hashCode;
-    await _notifications.cancel(notificationId);
-    debugPrint('Alarm cancelled: $alarmId');
+    try {
+      final int notificationId = alarmId.hashCode;
+      await _notifications.cancel(notificationId);
+      debugPrint('Alarm cancelled: $alarmId');
+    } catch (e) {
+      debugPrint('Error cancelling alarm $alarmId: $e');
+      // In release builds, some Flutter Local Notifications operations may fail
+      // due to obfuscation. We continue execution but log the error.
+      if (kReleaseMode) {
+        debugPrint('Release mode: Ignoring flutter_local_notifications error');
+      } else {
+        rethrow;
+      }
+    }
   }
 
   /// Cancel all alarms
   Future<void> cancelAllAlarms() async {
-    await _notifications.cancelAll();
-    debugPrint('All alarms cancelled');
+    try {
+      await _notifications.cancelAll();
+      debugPrint('All alarms cancelled');
+    } catch (e) {
+      debugPrint('Error cancelling all alarms: $e');
+      // In release builds, some Flutter Local Notifications operations may fail
+      // due to obfuscation. We continue execution but log the error.
+      if (kReleaseMode) {
+        debugPrint(
+          'Release mode: Ignoring flutter_local_notifications error for cancelAll',
+        );
+        // Alternative: Cancel alarms individually if we have a list
+        try {
+          final alarms = await AlarmService.instance.getAlarms();
+          for (final alarm in alarms) {
+            try {
+              final int notificationId = alarm.id.hashCode;
+              await _notifications.cancel(notificationId);
+            } catch (individualError) {
+              debugPrint(
+                'Error cancelling individual alarm ${alarm.id}: $individualError',
+              );
+            }
+          }
+        } catch (fallbackError) {
+          debugPrint('Fallback cancel method also failed: $fallbackError');
+        }
+      } else {
+        rethrow;
+      }
+    }
   }
 
   /// Get next alarm time based on alarm configuration
@@ -319,20 +387,29 @@ class AlarmSchedulerService {
 
     // For one-time alarms (no weekdays specified), use the exact time
     if (alarm.weekDays.isEmpty) {
-      // If it's a one-time alarm and the time has passed, return a future time
-      // This should not happen as we now check this in scheduleAlarm, but safety first
+      // If it's a one-time alarm and the time has passed, check tolerance
       if (alarm.time.isBefore(now)) {
-        debugPrint(
-          'Warning: One-time alarm time has passed: ${alarm.time} vs $now',
-        );
-        // Return tomorrow at the same time as fallback
-        return DateTime(
-          now.year,
-          now.month,
-          now.day + 1,
-          alarm.time.hour,
-          alarm.time.minute,
-        );
+        final timeDifference = now.difference(alarm.time);
+
+        if (timeDifference.inMinutes < 2) {
+          // Within grace period - schedule for immediate trigger
+          debugPrint(
+            'One-time alarm within grace period: ${timeDifference.inSeconds}s late - scheduling immediate trigger',
+          );
+          return now.add(const Duration(seconds: 5));
+        } else {
+          // Significantly past - schedule for tomorrow
+          debugPrint(
+            'Warning: One-time alarm time has significantly passed: ${alarm.time} vs $now (${timeDifference.inMinutes}min)',
+          );
+          return DateTime(
+            now.year,
+            now.month,
+            now.day + 1,
+            alarm.time.hour,
+            alarm.time.minute,
+          );
+        }
       }
       return alarm.time;
     }
@@ -447,5 +524,37 @@ class AlarmSchedulerService {
 
     // Also trigger the alarm screen directly
     _triggerAlarmScreen(alarmId);
+  }
+
+  /// Force reinitialize the notification service (useful for release build issues)
+  Future<void> forceReinitialize() async {
+    _isInitialized = false;
+    debugPrint('Force reinitializing notification service...');
+
+    try {
+      await initialize();
+      debugPrint('Notification service reinitialized successfully');
+    } catch (e) {
+      debugPrint('Error during force reinitialization: $e');
+      // Even if it fails, mark as initialized to prevent infinite loops
+      _isInitialized = true;
+      if (kReleaseMode) {
+        debugPrint('Release mode: Continuing despite reinitialization failure');
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  /// Check if notification service is healthy (for release build diagnostics)
+  Future<bool> isServiceHealthy() async {
+    try {
+      // Try a simple operation to test if the service works
+      await _notifications.getNotificationAppLaunchDetails();
+      return true;
+    } catch (e) {
+      debugPrint('Notification service health check failed: $e');
+      return false;
+    }
   }
 }

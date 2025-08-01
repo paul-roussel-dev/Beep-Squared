@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/alarm.dart';
 import '../screens/alarm_screen.dart';
@@ -178,10 +179,22 @@ class AlarmManagerService {
 
   /// Initialize the alarm manager
   Future<void> initialize() async {
-    // Request notification permissions
-    await AlarmSchedulerService.instance.requestPermissions();
+    try {
+      // Request notification permissions
+      await AlarmSchedulerService.instance.requestPermissions();
 
-    // Reschedule all alarms on app start
-    await AlarmSchedulerService.instance.rescheduleAllAlarms();
+      // Reschedule all alarms on app start
+      await AlarmSchedulerService.instance.rescheduleAllAlarms();
+      debugPrint('Alarm manager initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing alarm manager: $e');
+      // In release builds, some operations may fail due to obfuscation
+      // but we don't want to crash the app
+      if (kReleaseMode) {
+        debugPrint('Release mode: Continuing despite initialization errors');
+      } else {
+        rethrow;
+      }
+    }
   }
 }

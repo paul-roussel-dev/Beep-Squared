@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import '../models/alarm.dart';
@@ -38,11 +39,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Initialize alarm services
   Future<void> _initializeAlarmServices() async {
-    // Set context for alarm manager
-    _managerService.setContext(context);
+    try {
+      // Set context for alarm manager
+      _managerService.setContext(context);
 
-    // Initialize alarm manager
-    await _managerService.initialize();
+      // Initialize alarm manager
+      await _managerService.initialize();
+      debugPrint('Alarm services initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing alarm services: $e');
+      // In release builds, some initialization may fail due to obfuscation
+      // but we should continue with basic functionality
+      if (kReleaseMode) {
+        debugPrint(
+          'Release mode: Continuing despite service initialization errors',
+        );
+        // Show a warning to user but don't crash
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Some alarm features may be limited. Please restart the app if alarms don\'t work properly.',
+              ),
+              duration: Duration(seconds: 5),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else {
+        // In debug mode, we want to see the full error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Alarm initialization error: $e'),
+              duration: const Duration(seconds: 8),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        rethrow;
+      }
+    }
   }
 
   /// Load alarms from storage
