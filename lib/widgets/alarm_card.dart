@@ -25,6 +25,39 @@ class AlarmCard extends StatelessWidget {
     return RingtoneService.instance.getSoundDisplayName(soundPath);
   }
 
+  /// Get icon for unlock method
+  IconData _getUnlockMethodIcon(AlarmUnlockMethod method) {
+    switch (method) {
+      case AlarmUnlockMethod.simple:
+        return Icons.touch_app;
+      case AlarmUnlockMethod.math:
+        return Icons.calculate;
+    }
+  }
+
+  /// Get text for unlock method
+  String _getUnlockMethodText(AlarmUnlockMethod method) {
+    switch (method) {
+      case AlarmUnlockMethod.simple:
+        return 'Classique';
+      case AlarmUnlockMethod.math:
+        final difficultyText = _getMathDifficultyText(alarm.mathDifficulty);
+        return 'Calcul ($difficultyText)';
+    }
+  }
+
+  /// Get text for math difficulty
+  String _getMathDifficultyText(MathDifficulty difficulty) {
+    switch (difficulty) {
+      case MathDifficulty.easy:
+        return 'Facile';
+      case MathDifficulty.medium:
+        return 'Moyen';
+      case MathDifficulty.hard:
+        return 'Difficile';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -186,6 +219,13 @@ class AlarmCard extends StatelessWidget {
       spacing: 16,
       runSpacing: 8,
       children: [
+        // Unlock method (type d'alarme) - First to highlight the alarm type
+        _buildDetailChip(
+          icon: _getUnlockMethodIcon(alarm.unlockMethod),
+          text: _getUnlockMethodText(alarm.unlockMethod),
+          isPrimary: true, // Highlight the alarm type
+        ),
+
         // Repeat days
         _buildDetailChip(icon: Icons.repeat, text: alarm.weekDaysString),
 
@@ -203,12 +243,18 @@ class AlarmCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailChip({required IconData icon, required String text}) {
+  Widget _buildDetailChip({
+    required IconData icon, 
+    required String text,
+    bool isPrimary = false,
+  }) {
     return Builder(
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          color: isPrimary 
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -217,15 +263,15 @@ class AlarmCard extends StatelessWidget {
             Icon(
               icon,
               size: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: Colors.white, // Couleur blanche uniforme
             ),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
                 text,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Colors.white, // Couleur blanche uniforme
                   fontWeight: FontWeight.w500,
                 ),
                 overflow: TextOverflow.ellipsis,
