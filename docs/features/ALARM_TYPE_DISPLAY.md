@@ -29,7 +29,7 @@ String _getMathDifficultyText(MathDifficulty difficulty)
 
 ```dart
 Widget _buildDetailChip({
-  required IconData icon, 
+  required IconData icon,
   required String text,
   bool isPrimary = false, // Nouveau paramètre pour le highlighting
 })
@@ -39,11 +39,11 @@ Widget _buildDetailChip({
 
 ### Affichage des types d'alarme :
 
-| Type | Icône | Texte affiché | Style |
-|------|-------|---------------|--------|
-| **Classique** | `Icons.touch_app` | "Classique" | Chip avec couleur primaire |
-| **Calcul Facile** | `Icons.calculate` | "Calcul (Facile)" | Chip avec couleur primaire |
-| **Calcul Moyen** | `Icons.calculate` | "Calcul (Moyen)" | Chip avec couleur primaire |
+| Type                 | Icône             | Texte affiché        | Style                      |
+| -------------------- | ----------------- | -------------------- | -------------------------- |
+| **Classique**        | `Icons.touch_app` | "Classique"          | Chip avec couleur primaire |
+| **Calcul Facile**    | `Icons.calculate` | "Calcul (Facile)"    | Chip avec couleur primaire |
+| **Calcul Moyen**     | `Icons.calculate` | "Calcul (Moyen)"     | Chip avec couleur primaire |
 | **Calcul Difficile** | `Icons.calculate` | "Calcul (Difficile)" | Chip avec couleur primaire |
 
 ### Ordre d'affichage dans les détails :
@@ -56,7 +56,7 @@ Widget _buildDetailChip({
 ## 🎨 Design
 
 - **Couleur distinctive** : Le chip du type d'alarme utilise `primaryContainer` pour se distinguer
-- **Icônes intuitives** : 
+- **Icônes intuitives** :
   - 👆 `touch_app` pour les alarmes classiques
   - 🧮 `calculate` pour les alarmes avec calcul
 - **Texte informatif** : Inclut la difficulté pour les alarmes mathématiques

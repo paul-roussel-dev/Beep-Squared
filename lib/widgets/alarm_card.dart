@@ -244,7 +244,7 @@ class AlarmCard extends StatelessWidget {
   }
 
   Widget _buildDetailChip({
-    required IconData icon, 
+    required IconData icon,
     required String text,
     bool isPrimary = false,
   }) {
@@ -252,7 +252,7 @@ class AlarmCard extends StatelessWidget {
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isPrimary 
+          color: isPrimary
               ? Theme.of(context).colorScheme.primaryContainer
               : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
