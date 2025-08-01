@@ -14,6 +14,7 @@ import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -58,6 +59,7 @@ class AlarmOverlayService : Service() {
     private var currentAlarmId: String = ""
     private var currentLabel: String = ""
     private var currentUnlockMethod: String = "simple"
+    private var currentSoundPath: String = "default"
 
     companion object {
         private const val SNOOZE_DURATION_MINUTES = 5
@@ -109,9 +111,10 @@ class AlarmOverlayService : Service() {
         currentUnlockMethod = intent?.getStringExtra("unlockMethod") ?: "simple"
         currentMathDifficulty = intent?.getStringExtra("mathDifficulty") ?: "easy"
         currentMathOperations = intent?.getStringExtra("mathOperations") ?: "mixed"
+        currentSoundPath = intent?.getStringExtra("soundPath") ?: "default"
 
         createSnoozeNotificationChannel()
-        startAlarmSound()
+        startAlarmSound(currentSoundPath)
         showModernAlarmOverlay(currentAlarmId, currentLabel, currentUnlockMethod, currentMathDifficulty, currentMathOperations)
 
         return START_NOT_STICKY
@@ -119,7 +122,36 @@ class AlarmOverlayService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun startAlarmSound() {
+    private fun startAlarmSound(soundPath: String = "default") {
+        try {
+            when {
+                // Handle default sound
+                soundPath.isEmpty() || soundPath == "default" -> {
+                    startDefaultAlarmSound()
+                }
+                // Handle asset sounds (from Flutter assets)
+                soundPath.startsWith("assets/sounds/") -> {
+                    startAssetAlarmSound(soundPath)
+                }
+                // Handle custom file paths
+                soundPath.startsWith("/") -> {
+                    startCustomAlarmSound(soundPath)
+                }
+                // Fallback to default
+                else -> {
+                    Log.d("AlarmOverlayService", "Unknown sound path format: $soundPath, using default")
+                    startDefaultAlarmSound()
+                }
+            }
+            Log.d("AlarmOverlayService", "Alarm sound started with path: $soundPath")
+        } catch (e: Exception) {
+            Log.e("AlarmOverlayService", "Error starting alarm sound: ${e.message}")
+            // Fallback to default alarm sound
+            startDefaultAlarmSound()
+        }
+    }
+
+    private fun startDefaultAlarmSound() {
         try {
             val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             mediaPlayer = MediaPlayer().apply {
@@ -129,9 +161,48 @@ class AlarmOverlayService : Service() {
                 prepare()
                 start()
             }
-            Log.d("AlarmOverlayService", "Alarm sound started")
+            Log.d("AlarmOverlayService", "Default alarm sound started")
         } catch (e: Exception) {
-            Log.e("AlarmOverlayService", "Error starting alarm sound: ${e.message}")
+            Log.e("AlarmOverlayService", "Error with default alarm sound: ${e.message}")
+        }
+    }
+
+    private fun startAssetAlarmSound(assetPath: String) {
+        try {
+            // For Flutter assets, we need to use AssetFileDescriptor
+            val assetManager = assets
+            val flutterAssetPath = "flutter_assets/$assetPath"
+            
+            val afd = assetManager.openFd(flutterAssetPath)
+            mediaPlayer = MediaPlayer().apply {
+                setAudioStreamType(AudioManager.STREAM_ALARM)
+                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                isLooping = true
+                prepare()
+                start()
+            }
+            afd.close()
+            Log.d("AlarmOverlayService", "Asset alarm sound started: $assetPath")
+        } catch (e: Exception) {
+            Log.w("AlarmOverlayService", "Asset not found: $assetPath, using default alarm")
+            startDefaultAlarmSound()
+        }
+    }
+
+    private fun startCustomAlarmSound(filePath: String) {
+        try {
+            val fileUri = Uri.parse("file://$filePath")
+            mediaPlayer = MediaPlayer().apply {
+                setAudioStreamType(AudioManager.STREAM_ALARM)
+                setDataSource(this@AlarmOverlayService, fileUri)
+                isLooping = true
+                prepare()
+                start()
+            }
+            Log.d("AlarmOverlayService", "Custom alarm sound started: $filePath")
+        } catch (e: Exception) {
+            Log.w("AlarmOverlayService", "Invalid custom sound path: $filePath, using default")
+            startDefaultAlarmSound()
         }
     }
 
@@ -1059,6 +1130,7 @@ class AlarmOverlayService : Service() {
             val intent = Intent(this, AlarmOverlayService::class.java).apply {
                 putExtra("alarmId", alarmId)
                 putExtra("label", currentLabel)
+                putExtra("soundPath", currentSoundPath)
                 putExtra("unlockMethod", currentUnlockMethod)
                 putExtra("mathDifficulty", currentMathDifficulty)
                 putExtra("mathOperations", currentMathOperations)
