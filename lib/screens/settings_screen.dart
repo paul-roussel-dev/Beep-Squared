@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
 import '../utils/app_theme.dart';
+import '../utils/theme_manager.dart';
 import '../main.dart';
 
 /// Settings screen for configuring app preferences
@@ -50,7 +51,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await prefs.setInt('evening_start_hour', _eveningStartHour);
       await prefs.setInt('evening_end_hour', _eveningEndHour);
 
-      // Trigger theme reload in main app
+      // Invalidate theme manager cache and trigger theme reload
+      ThemeManager.instance.invalidateTimeCache();
       BeepSquaredApp.reloadTheme();
 
       if (mounted) {
@@ -61,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Paramètres sauvegardés - Thème mis à jour'),
+            content: Text('Settings saved - Theme updated'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -71,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erreur lors de la sauvegarde'),
+            content: Text('Error saving settings'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -87,19 +89,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Paramètres')),
+        appBar: AppBar(title: const Text('Settings')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Paramètres'),
+        title: const Text('Settings'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saveSettings,
-            tooltip: 'Sauvegarder',
+            tooltip: 'Save',
           ),
         ],
       ),
@@ -117,22 +119,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Icon(
                         AppTheme.isEveningTime ? Icons.bedtime : Icons.wb_sunny,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: const Color(0xFFFFFFFF),
                       ),
                       const SizedBox(width: AppConstants.spacingSmall),
                       Text(
-                        'Thème Adaptatif',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        'Adaptive Theme',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(color: const Color(0xFFFFFFFF)),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppConstants.spacingSmall),
                   Text(
-                    'Configuration des horaires de changement de couleur automatique',
+                    'Configure automatic color change schedule',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: const Color(0xFFFFFFFF),
                     ),
                   ),
                   const SizedBox(height: AppConstants.spacingLarge),
@@ -140,9 +141,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Evening Start Hour
                   ListTile(
                     leading: const Icon(Icons.nightlight),
-                    title: const Text('Début du mode nuit'),
+                    title: const Text('Evening mode start'),
                     subtitle: Text(
-                      'Passage au thème orange à ${_formatHour(_eveningStartHour)}',
+                      'Switch to orange theme at ${_formatHour(_eveningStartHour)}',
                     ),
                     trailing: DropdownButton<int>(
                       value: _eveningStartHour,
@@ -167,9 +168,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Evening End Hour
                   ListTile(
                     leading: const Icon(Icons.wb_sunny),
-                    title: const Text('Fin du mode nuit'),
+                    title: const Text('Evening mode end'),
                     subtitle: Text(
-                      'Passage au thème bleu à ${_formatHour(_eveningEndHour)}',
+                      'Switch to blue theme at ${_formatHour(_eveningEndHour)}',
                     ),
                     trailing: DropdownButton<int>(
                       value: _eveningEndHour,
@@ -216,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ? Icons.bedtime
                               : Icons.wb_sunny,
                           size: 32,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: const Color(0xFFFFFFFF),
                         ),
                         const SizedBox(height: AppConstants.spacingSmall),
                         Text(
@@ -227,16 +228,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ? 'Mode Nuit Actif'
                               : 'Mode Jour Actif',
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFFFFFFF),
+                              ),
                         ),
                         Text(
-                          'Basé sur l\'heure actuelle: ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                          'Based on current time: ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}',
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
+                              ?.copyWith(color: const Color(0xFFFFFFFF)),
                         ),
                       ],
                     ),
@@ -245,6 +245,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+
+          const SizedBox(height: AppConstants.spacingLarge),
 
           const SizedBox(height: AppConstants.spacingLarge),
 
@@ -257,26 +259,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      const Icon(Icons.info_outline, color: Color(0xFFFFFFFF)),
                       const SizedBox(width: AppConstants.spacingSmall),
                       Text(
-                        'À propos',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        'About',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(color: const Color(0xFFFFFFFF)),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppConstants.spacingMedium),
                   Text(
-                    '🌙 Le thème orange/warm du soir favorise la production de mélatonine et améliore la qualité du sommeil',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    '🌙 The orange/warm evening theme promotes melatonin production and improves sleep quality',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFFFFFFFF),
+                    ),
                   ),
                   const SizedBox(height: AppConstants.spacingSmall),
                   Text(
-                    '☀️ Le thème bleu du jour stimule la vigilance et l\'énergie',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    '☀️ The blue day theme stimulates alertness and energy',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFFFFFFFF),
+                    ),
                   ),
                 ],
               ),

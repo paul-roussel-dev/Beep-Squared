@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
-import '../utils/app_theme.dart';
+import '../utils/theme_manager.dart';
 import '../models/alarm.dart';
 import '../services/alarm_service.dart';
 import '../services/alarm_scheduler_service.dart';
@@ -126,13 +126,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _navigateToSettings() async {
     final settingsChanged = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
     );
-    
-    // If settings changed, trigger a complete rebuild to apply new theme
+
+    // If settings changed, reload theme cache and trigger a complete rebuild
     if (mounted && settingsChanged == true) {
+      await ThemeManager.instance.reloadTimeSettings();
       setState(() {});
     }
   }
@@ -153,9 +152,10 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           title: Text(
             widget.title,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFFFFFFF),
+            ),
           ),
           centerTitle: true,
           elevation: 0,
@@ -165,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () => _navigateToSettings(),
-              tooltip: 'Paramètres',
+              tooltip: 'Settings',
             ),
             if (_alarms.isNotEmpty)
               PopupMenuButton<String>(
@@ -175,20 +175,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
                 itemBuilder: (context) => [
-                  PopupMenuItem(
+                  const PopupMenuItem(
                     value: 'clear_all',
                     child: Row(
                       children: [
                         Icon(
                           Icons.clear_all,
-                          color: Theme.of(context).colorScheme.error,
+                          color: Color(0xFFFFFFFF), // Couleur blanche fixe
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Text(
                           'Clear all',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                            color: Color(0xFFFFFFFF), // Couleur blanche fixe
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -205,14 +205,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.primary,
+                    const CircularProgressIndicator(
+                      color: Color(0xFFFFFFFF), // Couleur blanche fixe
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Loading alarms...',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: const Color(0xFFFFFFFF), // Couleur blanche fixe
                       ),
                     ),
                   ],
@@ -242,20 +242,20 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: Theme.of(context).colorScheme.primary,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.alarm,
                 size: 64,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                color: Color(0xFFFFFFFF), // Couleur blanche fixe
               ),
             ),
             const SizedBox(height: 32),
             Text(
               AppConstants.noAlarmsMessage,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
+                color: const Color(0xFFFFFFFF), // Couleur blanche fixe
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -264,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Create your first alarm to get started.\nTap the button below to begin.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: const Color(0xFFFFFFFF), // Couleur blanche fixe
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -303,16 +303,16 @@ class _HomeScreenState extends State<HomeScreen> {
           sliver: SliverToBoxAdapter(
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.access_time,
                   size: 20,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Color(0xFFFFFFFF), // Couleur blanche fixe
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${_alarms.length} alarm${_alarms.length > 1 ? 's' : ''}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: const Color(0xFFFFFFFF), // Couleur blanche fixe
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -364,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
             content: Text(
               '${AppConstants.alarmSetMessage} ${result.formattedTime}',
             ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: const Color(0xFFFFFFFF),
           ),
         );
       }
@@ -396,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
             content: Text(
               '${AppConstants.alarmUpdatedMessage} ${result.formattedTime}',
             ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: const Color(0xFFFFFFFF),
           ),
         );
       }
@@ -434,7 +434,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFFFFFFF),
+            ), // Couleur blanche fixe
             child: const Text('Delete'),
           ),
         ],
@@ -451,9 +453,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(AppConstants.alarmDeletedMessage),
-            backgroundColor: Theme.of(context).colorScheme.error,
+          const SnackBar(
+            content: Text(AppConstants.alarmDeletedMessage),
+            backgroundColor: Color(0xFFFFFFFF),
           ),
         );
       }
@@ -473,7 +475,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFFFFFFF),
+            ), // Couleur blanche fixe
             child: const Text('Clear All'),
           ),
         ],
@@ -486,9 +490,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('All alarms cleared'),
-            backgroundColor: Theme.of(context).colorScheme.error,
+          const SnackBar(
+            content: Text('All alarms cleared'),
+            backgroundColor: Color(0xFFFFFFFF),
           ),
         );
       }
@@ -497,18 +501,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Build theme mode indicator showing day/evening status
   Widget _buildThemeModeIndicator() {
+    final isCurrentlyEvening = ThemeManager.instance.effectiveIsEveningTime;
+
     return Container(
       margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Center(
-        child: Icon(
-          AppTheme.isEveningTime ? Icons.bedtime : Icons.wb_sunny,
-          size: 20,
-          color: Colors.white,
-        ),
+      child: Icon(
+        isCurrentlyEvening ? Icons.bedtime : Icons.wb_sunny,
+        size: 20,
+        color: const Color(0xFFFFFFFF),
       ),
     );
   }

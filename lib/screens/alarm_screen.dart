@@ -310,7 +310,11 @@ class _AlarmScreenState extends State<AlarmScreen>
                 SizedBox(width: 12),
                 Text(
                   'Dismiss',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFFFFFF),
+                  ),
                 ),
               ],
             ),

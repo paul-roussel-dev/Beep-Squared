@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'utils/constants.dart';
 import 'utils/app_theme.dart';
+import 'utils/theme_manager.dart';
 import 'services/alarm_manager_service.dart';
 import 'services/alarm_monitor_service.dart';
 import 'services/android_alarm_service.dart';
@@ -63,17 +64,23 @@ class _BeepSquaredAppState extends State<BeepSquaredApp>
 
     // Initialize native services after the Flutter engine is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeNativeServices();
-      _loadTheme(); // Load theme from settings
+      _initializeServices();
     });
 
     // Set up periodic theme updates to check for day/evening transitions
     _startThemeTimer();
   }
 
+  /// Initialize services and load theme
+  Future<void> _initializeServices() async {
+    await ThemeManager.instance.initialize();
+    await _initializeNativeServices();
+    await _loadTheme(); // Load theme from settings
+  }
+
   /// Load theme from settings and update if needed
   Future<void> _loadTheme() async {
-    final theme = await AppTheme.getAdaptiveThemeFromSettings();
+    final theme = await ThemeManager.instance.getCurrentTheme();
     if (mounted) {
       setState(() {
         _currentTheme = theme;

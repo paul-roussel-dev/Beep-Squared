@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/alarm.dart';
 import '../services/ringtone_service.dart';
 
@@ -42,7 +42,7 @@ class AlarmCard extends StatelessWidget {
         return 'Classique';
       case AlarmUnlockMethod.math:
         final difficultyText = _getMathDifficultyText(alarm.mathDifficulty);
-        return 'Calcul ($difficultyText)';
+        return 'Math ($difficultyText)';
     }
   }
 
@@ -82,11 +82,9 @@ class AlarmCard extends StatelessWidget {
                           alarm.formattedTime,
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                color: alarm.isEnabled
-                                    ? Theme.of(context).colorScheme.onSurface
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
+                                color: const Color(
+                                  0xFFFFFFFF,
+                                ), // Couleur blanche fixe
                                 fontWeight: FontWeight.w600,
                                 fontSize: 28,
                               ),
@@ -104,13 +102,13 @@ class AlarmCard extends StatelessWidget {
                               ).colorScheme.errorContainer,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text(
+                            child: const Text(
                               'OFF',
                               style: TextStyle(
                                 fontSize: 10,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onErrorContainer,
+                                color: Color(
+                                  0xFFFFFFFF,
+                                ), // Couleur blanche fixe
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -121,9 +119,7 @@ class AlarmCard extends StatelessWidget {
                     Text(
                       alarm.label,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: alarm.isEnabled
-                            ? Theme.of(context).colorScheme.onSurface
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: const Color(0xFFFFFFFF), // Couleur blanche fixe
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -153,10 +149,10 @@ class AlarmCard extends StatelessWidget {
                         ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.more_vert,
                         size: 20,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: Color(0xFFFFFFFF), // Couleur blanche fixe
                       ),
                     ),
                     onSelected: (value) {
@@ -170,34 +166,39 @@ class AlarmCard extends StatelessWidget {
                       }
                     },
                     itemBuilder: (context) => [
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'edit',
                         child: Row(
                           children: [
                             Icon(
                               Icons.edit,
                               size: 18,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: Color(0xFFFFFFFF), // Couleur blanche fixe
                             ),
-                            const SizedBox(width: 12),
-                            const Text('Edit'),
+                            SizedBox(width: 12),
+                            Text(
+                              'Edit',
+                              style: TextStyle(color: Color(0xFFFFFFFF)),
+                            ),
                           ],
                         ),
                       ),
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
                             Icon(
                               Icons.delete,
                               size: 18,
-                              color: Theme.of(context).colorScheme.error,
+                              color: Color(0xFFFFFFFF), // Couleur blanche fixe
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Text(
                               'Delete',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
+                                color: Color(
+                                  0xFFFFFFFF,
+                                ), // Couleur blanche fixe
                               ),
                             ),
                           ],
@@ -253,7 +254,7 @@ class AlarmCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: isPrimary
-              ? Theme.of(context).colorScheme.primaryContainer
+              ? const Color(0xFFFFFFFF)
               : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
         ),

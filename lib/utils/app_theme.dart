@@ -22,13 +22,16 @@ class AppTheme {
   }
 
   static ThemeData getAdaptiveThemeCustom(int eveningStart, int eveningEnd) {
-    return isEveningTimeCustom(eveningStart, eveningEnd) ? eveningTheme : dayTheme;
+    return isEveningTimeCustom(eveningStart, eveningEnd)
+        ? eveningTheme
+        : dayTheme;
   }
 
   static Future<ThemeData> getAdaptiveThemeFromSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final eveningStart = prefs.getInt('evening_start_hour') ?? eveningStartHour;
+      final eveningStart =
+          prefs.getInt('evening_start_hour') ?? eveningStartHour;
       final eveningEnd = prefs.getInt('evening_end_hour') ?? eveningEndHour;
       return getAdaptiveThemeCustom(eveningStart, eveningEnd);
     } catch (e) {
@@ -55,19 +58,41 @@ class AppTheme {
       error: Color(0xFFD32F2F),
       onError: Color(0xFFFFFFFF),
       errorContainer: Color(0xFFFFCDD2),
-      onErrorContainer: Color(0xFFB71C1C),
+      onErrorContainer: Color(0xFFFFFFFF), // Changé de B71C1C à FFFFFF
       outline: Color(0xFF79747E),
       surface: Color(0xFF283593),
       onSurface: Color(0xFFFFFFFF),
       surfaceContainerHighest: Color(0xFF3F51B5),
-      onSurfaceVariant: Color(0xFFE8EAF6),
+      onSurfaceVariant: Color(0xFFFFFFFF), // Changé de E8EAF6 à FFFFFF
       inverseSurface: Color(0xFF313033),
       onInverseSurface: Color(0xFFF4EFF4),
       inversePrimary: Color(0xFFBDC2FF),
       shadow: Color(0xFF000000),
       surfaceTint: Color(0xFF3F51B5),
     );
-    return ThemeData(useMaterial3: true, colorScheme: colorScheme);
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      // Define TextTheme with white color by default
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        displayMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        displaySmall: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineSmall: TextStyle(color: Color(0xFFFFFFFF)),
+        titleLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        titleMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        titleSmall: TextStyle(color: Color(0xFFFFFFFF)),
+        bodyLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        bodyMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        bodySmall: TextStyle(color: Color(0xFFFFFFFF)),
+        labelLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        labelMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        labelSmall: TextStyle(color: Color(0xFFFFFFFF)),
+      ),
+    );
   }
 
   static ThemeData get eveningTheme {
@@ -88,20 +113,95 @@ class AppTheme {
       error: Color(0xFFD32F2F),
       onError: Color(0xFFFFFFFF),
       errorContainer: Color(0xFFFFCDD2),
-      onErrorContainer: Color(0xFFB71C1C),
+      onErrorContainer: Color(0xFFFFFFFF), // Changé de B71C1C à FFFFFF
       outline: Color(0xFF79747E),
       surface: Color(0xFFE65100),
       onSurface: Color(0xFFFFFFFF),
       surfaceContainerHighest: Color(0xFFFF8A50),
-      onSurfaceVariant: Color(0xFFFFF3E0),
+      onSurfaceVariant: Color(0xFFFFFFFF), // Changé de FFF3E0 à FFFFFF
       inverseSurface: Color(0xFF313033),
       onInverseSurface: Color(0xFFF4EFF4),
       inversePrimary: Color(0xFFFFCC80),
       shadow: Color(0xFF000000),
       surfaceTint: Color(0xFFFF8A50),
     );
-    return ThemeData(useMaterial3: true, colorScheme: colorScheme);
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      // Define TextTheme with white color by default
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        displayMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        displaySmall: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineSmall: TextStyle(color: Color(0xFFFFFFFF)),
+        titleLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        titleMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        titleSmall: TextStyle(color: Color(0xFFFFFFFF)),
+        bodyLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        bodyMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        bodySmall: TextStyle(color: Color(0xFFFFFFFF)),
+        labelLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        labelMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        labelSmall: TextStyle(color: Color(0xFFFFFFFF)),
+      ),
+    );
   }
 
-  static ThemeData get darkTheme => dayTheme;
+  static ThemeData get darkTheme {
+    const colorScheme = ColorScheme(
+      brightness: Brightness.dark,
+      primary: Color(0xFF3F51B5),
+      onPrimary: Color(0xFFFFFFFF),
+      primaryContainer: Color(0xFF3F51B5),
+      onPrimaryContainer: Color(0xFFFFFFFF),
+      secondary: Color(0xFF5C6BC0),
+      onSecondary: Color(0xFFFFFFFF),
+      secondaryContainer: Color(0xFF5C6BC0),
+      onSecondaryContainer: Color(0xFFFFFFFF),
+      tertiary: Color(0xFF7986CB),
+      onTertiary: Color(0xFFFFFFFF),
+      tertiaryContainer: Color(0xFF7986CB),
+      onTertiaryContainer: Color(0xFFFFFFFF),
+      error: Color(0xFFD32F2F),
+      onError: Color(0xFFFFFFFF),
+      errorContainer: Color(0xFFFFCDD2),
+      onErrorContainer: Color(0xFFFFFFFF),
+      outline: Color(0xFF79747E),
+      surface: Color(0xFF283593),
+      onSurface: Color(0xFFFFFFFF),
+      surfaceContainerHighest: Color(0xFF3F51B5),
+      onSurfaceVariant: Color(0xFFFFFFFF),
+      inverseSurface: Color(0xFF313033),
+      onInverseSurface: Color(0xFFF4EFF4),
+      inversePrimary: Color(0xFFBDC2FF),
+      shadow: Color(0xFF000000),
+      surfaceTint: Color(0xFF3F51B5),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      // Define TextTheme with white color by default
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        displayMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        displaySmall: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        headlineSmall: TextStyle(color: Color(0xFFFFFFFF)),
+        titleLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        titleMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        titleSmall: TextStyle(color: Color(0xFFFFFFFF)),
+        bodyLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        bodyMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        bodySmall: TextStyle(color: Color(0xFFFFFFFF)),
+        labelLarge: TextStyle(color: Color(0xFFFFFFFF)),
+        labelMedium: TextStyle(color: Color(0xFFFFFFFF)),
+        labelSmall: TextStyle(color: Color(0xFFFFFFFF)),
+      ),
+    );
+  }
 }

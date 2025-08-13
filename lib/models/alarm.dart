@@ -16,9 +16,9 @@ enum AlarmUnlockMethod {
 
 /// Math difficulty settings
 enum MathDifficulty {
-  easy('Facile', 'Calculs simples (1-50)'),
-  medium('Moyen', 'Calculs moyens (1-100)'),
-  hard('Difficile', 'Calculs difficiles (1-200)');
+  easy('Easy', 'Simple calculations (1-50)'),
+  medium('Medium', 'Medium calculations (1-100)'),
+  hard('Hard', 'Hard calculations (1-200)');
 
   const MathDifficulty(this.displayName, this.description);
   final String displayName;
@@ -28,9 +28,9 @@ enum MathDifficulty {
 /// Math operations settings
 enum MathOperations {
   additionOnly('Addition', '+'),
-  subtractionOnly('Soustraction', '-'),
+  subtractionOnly('Subtraction', '-'),
   multiplicationOnly('Multiplication', '×'),
-  mixed('Mélangé', '+ - ×');
+  mixed('Mixed', '+ - ×');
 
   const MathOperations(this.displayName, this.symbol);
   final String displayName;
