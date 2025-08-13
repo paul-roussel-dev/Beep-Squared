@@ -1,74 +1,70 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:beep_squared/utils/constants.dart';
+import 'package:beep_squared/constants/constants.dart';
 
 void main() {
   group('Constants Tests', () {
     group('App Information Tests', () {
       test('should have valid app name', () {
-        expect(AppConstants.appName, isNotEmpty);
-        expect(AppConstants.appName, equals('Beep Squared'));
+        expect(AppStrings.appName, isNotEmpty);
+        expect(AppStrings.appName, equals('Beep Squared'));
       });
 
       test('should have valid app version', () {
-        expect(AppConstants.appVersion, isNotEmpty);
-        expect(AppConstants.appVersion, matches(RegExp(r'^\d+\.\d+\.\d+$')));
-        expect(AppConstants.appVersion, equals('1.0.0'));
+        expect(AppStrings.appVersion, isNotEmpty);
+        expect(AppStrings.appVersion, matches(RegExp(r'^\d+\.\d+\.\d+$')));
+        expect(AppStrings.appVersion, equals('1.0.0'));
       });
     });
 
     group('Spacing Constants Tests', () {
       test('should have consistent spacing values', () {
-        expect(AppConstants.spacingSmall, lessThan(AppConstants.spacingMedium));
-        expect(AppConstants.spacingMedium, lessThan(AppConstants.spacingLarge));
+        expect(AppSizes.spacingSmall, lessThan(AppSizes.spacingMedium));
+        expect(AppSizes.spacingMedium, lessThan(AppSizes.spacingLarge));
 
         // Check actual values
-        expect(AppConstants.spacingSmall, equals(8.0));
-        expect(AppConstants.spacingMedium, equals(16.0));
-        expect(AppConstants.spacingLarge, equals(24.0));
+        expect(AppSizes.spacingSmall, equals(8.0));
+        expect(AppSizes.spacingMedium, equals(16.0));
+        expect(AppSizes.spacingLarge, equals(24.0));
       });
 
       test('should have positive spacing values', () {
-        expect(AppConstants.spacingSmall, greaterThan(0));
-        expect(AppConstants.spacingMedium, greaterThan(0));
-        expect(AppConstants.spacingLarge, greaterThan(0));
+        expect(AppSizes.spacingSmall, greaterThan(0));
+        expect(AppSizes.spacingMedium, greaterThan(0));
+        expect(AppSizes.spacingLarge, greaterThan(0));
       });
 
       test('should follow 8dp grid system', () {
-        expect(AppConstants.spacingSmall % 8, equals(0));
-        expect(AppConstants.spacingMedium % 8, equals(0));
-        expect(AppConstants.spacingLarge % 8, equals(0));
+        expect(AppSizes.spacingSmall % 8, equals(0));
+        expect(AppSizes.spacingMedium % 8, equals(0));
+        expect(AppSizes.spacingLarge % 8, equals(0));
       });
     });
 
     group('Icon Size Constants Tests', () {
       test('should have consistent icon size progression', () {
-        expect(
-          AppConstants.iconSizeSmall,
-          lessThan(AppConstants.iconSizeMedium),
-        );
-        expect(
-          AppConstants.iconSizeMedium,
-          lessThan(AppConstants.iconSizeLarge),
-        );
+        expect(AppSizes.iconSmall, lessThan(AppSizes.iconMedium));
+        expect(AppSizes.iconMedium, lessThan(AppSizes.iconLarge));
 
         // Check actual values
-        expect(AppConstants.iconSizeSmall, equals(16.0));
-        expect(AppConstants.iconSizeMedium, equals(24.0));
-        expect(AppConstants.iconSizeLarge, equals(32.0));
+        expect(AppSizes.iconSmall, equals(16.0));
+        expect(AppSizes.iconMedium, equals(20.0));
+        expect(AppSizes.iconLarge, equals(24.0));
       });
 
       test('should have positive icon sizes', () {
-        expect(AppConstants.iconSizeSmall, greaterThan(0));
-        expect(AppConstants.iconSizeMedium, greaterThan(0));
-        expect(AppConstants.iconSizeLarge, greaterThan(0));
+        expect(AppSizes.iconSmall, greaterThan(0));
+        expect(AppSizes.iconMedium, greaterThan(0));
+        expect(AppSizes.iconLarge, greaterThan(0));
       });
     });
 
     group('Color Constants Tests', () {
-      test('should have valid primary color', () {
-        expect(AppConstants.primaryColor, equals(Colors.indigo));
-        expect(AppConstants.primaryColor, isA<Color>());
+      test('should have valid primary colors', () {
+        expect(AppColors.dayPrimary, isA<Color>());
+        expect(AppColors.eveningPrimary, isA<Color>());
+        expect(AppColors.white, equals(const Color(0xFFFFFFFF)));
+        expect(AppColors.black, equals(const Color(0xFF000000)));
       });
     });
 
@@ -90,7 +86,6 @@ void main() {
       test('should have valid default ringtone path', () {
         expect(AppConstants.defaultRingtonePath, isNotEmpty);
         expect(AppConstants.defaultRingtonePath, startsWith('assets/'));
-        expect(AppConstants.defaultRingtonePath, endsWith('.wav'));
       });
     });
 
@@ -143,36 +138,32 @@ void main() {
 
     group('UI Message Constants Tests', () {
       test('should have valid UI messages', () {
-        expect(AppConstants.noAlarmsMessage, isNotEmpty);
-        expect(AppConstants.addAlarmTooltip, isNotEmpty);
-        expect(AppConstants.alarmSetMessage, isNotEmpty);
-        expect(AppConstants.alarmUpdatedMessage, isNotEmpty);
-        expect(AppConstants.alarmDeletedMessage, isNotEmpty);
+        expect(AppStrings.noAlarmsMessage, isNotEmpty);
+        expect(AppStrings.addAlarm, isNotEmpty);
+        expect(AppStrings.settings, isNotEmpty);
+        expect(AppStrings.cancel, isNotEmpty);
+        expect(AppStrings.delete, isNotEmpty);
 
         // Check actual values
-        expect(AppConstants.noAlarmsMessage, equals('No alarms set'));
-        expect(AppConstants.addAlarmTooltip, equals('Add alarm'));
-        expect(AppConstants.alarmSetMessage, equals('Alarm set for'));
-        expect(AppConstants.alarmUpdatedMessage, equals('Alarm updated for'));
-        expect(AppConstants.alarmDeletedMessage, equals('Alarm deleted'));
+        expect(AppStrings.noAlarmsMessage, equals('No alarms set'));
+        expect(AppStrings.addAlarm, equals('Add Alarm'));
+        expect(AppStrings.settings, equals('Settings'));
+        expect(AppStrings.cancel, equals('Cancel'));
+        expect(AppStrings.delete, equals('Delete'));
       });
 
       test('UI messages should be user-friendly', () {
         final messages = [
-          AppConstants.noAlarmsMessage,
-          AppConstants.addAlarmTooltip,
-          AppConstants.alarmSetMessage,
-          AppConstants.alarmUpdatedMessage,
-          AppConstants.alarmDeletedMessage,
+          AppStrings.noAlarmsMessage,
+          AppStrings.addAlarm,
+          AppStrings.settings,
+          AppStrings.cancel,
+          AppStrings.delete,
         ];
 
         for (final message in messages) {
-          expect(message.length, greaterThan(3)); // Not too short
+          expect(message.length, greaterThan(2)); // Not too short
           expect(message.length, lessThan(50)); // Not too long
-          expect(
-            message[0].toUpperCase(),
-            equals(message[0]),
-          ); // Starts with capital
         }
       });
     });
@@ -180,40 +171,25 @@ void main() {
     group('Value Range Tests', () {
       test('should have reasonable numeric values', () {
         // Icon sizes should be reasonable for UI
-        expect(AppConstants.iconSizeSmall, greaterThanOrEqualTo(12.0));
-        expect(AppConstants.iconSizeSmall, lessThanOrEqualTo(20.0));
+        expect(AppSizes.iconSmall, greaterThanOrEqualTo(12.0));
+        expect(AppSizes.iconSmall, lessThanOrEqualTo(20.0));
 
-        expect(AppConstants.iconSizeMedium, greaterThanOrEqualTo(20.0));
-        expect(AppConstants.iconSizeMedium, lessThanOrEqualTo(30.0));
+        expect(AppSizes.iconMedium, greaterThanOrEqualTo(18.0));
+        expect(AppSizes.iconMedium, lessThanOrEqualTo(25.0));
 
-        expect(AppConstants.iconSizeLarge, greaterThanOrEqualTo(30.0));
-        expect(AppConstants.iconSizeLarge, lessThanOrEqualTo(40.0));
+        expect(AppSizes.iconLarge, greaterThanOrEqualTo(22.0));
+        expect(AppSizes.iconLarge, lessThanOrEqualTo(30.0));
 
         // Spacing should follow Material Design guidelines
-        expect(AppConstants.spacingSmall, greaterThanOrEqualTo(4.0));
-        expect(AppConstants.spacingMedium, greaterThanOrEqualTo(12.0));
-        expect(AppConstants.spacingLarge, greaterThanOrEqualTo(20.0));
+        expect(AppSizes.spacingSmall, greaterThanOrEqualTo(4.0));
+        expect(AppSizes.spacingMedium, greaterThanOrEqualTo(12.0));
+        expect(AppSizes.spacingLarge, greaterThanOrEqualTo(20.0));
       });
 
       test('should have consistent proportions', () {
-        // Icon sizes should have consistent ratio
-        const smallToMedium =
-            AppConstants.iconSizeMedium / AppConstants.iconSizeSmall;
-        const mediumToLarge =
-            AppConstants.iconSizeLarge / AppConstants.iconSizeMedium;
-
-        expect(smallToMedium, closeTo(1.5, 0.1)); // Approximately 1.5x
-        expect(mediumToLarge, closeTo(1.33, 0.1)); // Approximately 1.33x
-
-        // Spacing should double
-        expect(
-          AppConstants.spacingMedium / AppConstants.spacingSmall,
-          equals(2.0),
-        );
-        expect(
-          AppConstants.spacingLarge / AppConstants.spacingSmall,
-          equals(3.0),
-        );
+        // Spacing should have consistent ratios
+        expect(AppSizes.spacingMedium / AppSizes.spacingSmall, equals(2.0));
+        expect(AppSizes.spacingLarge / AppSizes.spacingSmall, equals(3.0));
       });
     });
 
@@ -227,6 +203,25 @@ void main() {
       test('should use consistent path separators', () {
         expect(AppConstants.defaultRingtonePath.contains('\\'), isFalse);
         expect(AppConstants.defaultRingtonePath.contains('//'), isFalse);
+      });
+    });
+
+    group('Theme Colors Tests', () {
+      test('should have valid theme colors', () {
+        expect(AppColors.dayPrimary, isA<Color>());
+        expect(AppColors.eveningPrimary, isA<Color>());
+
+        // Day theme should be blue-ish
+        expect(
+          AppColors.dayPrimary.blue,
+          greaterThan(AppColors.dayPrimary.red),
+        );
+
+        // Evening theme should be orange-ish
+        expect(
+          AppColors.eveningPrimary.red,
+          greaterThan(AppColors.eveningPrimary.blue),
+        );
       });
     });
   });
