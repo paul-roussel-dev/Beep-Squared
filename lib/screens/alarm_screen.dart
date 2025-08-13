@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/constants.dart';
 import 'package:flutter/services.dart';
 import '../models/alarm.dart';
 import '../services/audio_preview_service.dart';
@@ -313,7 +314,7 @@ class _AlarmScreenState extends State<AlarmScreen>
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFFFFFFF),
+                    color: AppColors.white,
                   ),
                 ),
               ],

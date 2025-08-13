@@ -187,10 +187,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: colorScheme.onSurfaceVariant,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: colorScheme.onSurfaceVariant, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

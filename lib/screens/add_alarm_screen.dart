@@ -1,12 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/alarm.dart';
-import '../utils/constants.dart';
 import '../services/ringtone_service.dart';
 import '../services/audio_preview_service.dart';
+import '../constants/constants.dart';
 
 class AddAlarmScreen extends StatefulWidget {
-  final Alarm? alarm; // Alarme existante à éditer (optionnel)
+  final Alarm? alarm; // Alarme existante ? ?diter (optionnel)
 
   const AddAlarmScreen({super.key, this.alarm});
 
@@ -56,7 +56,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       // Initialize with default values
       _selectedTime = TimeOfDay.now();
       _labelController = TextEditingController(
-        text: AppConstants.defaultAlarmLabel,
+        text: AppStrings.defaultAlarmLabel,
       );
       _isEnabled = true;
     }
@@ -80,38 +80,38 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   @override
   void dispose() {
     _labelController.dispose();
-    _audioPreviewService.stopPreview(); // Arrêter tout son en cours
+    _audioPreviewService.stopPreview(); // Arr?ter tout son en cours
     super.dispose();
   }
 
   Future<bool> _onWillPop() async {
-    // Vérifier si des changements ont été faits
+    // V?rifier si des changements ont ?t? faits
     if (_hasChanges()) {
       final shouldLeave = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text(
-            'Discard Changes?',
-            style: TextStyle(color: Color(0xFFFFFFFF)),
+            AppStrings.discardChanges,
+            style: TextStyle(color: AppColors.white),
           ),
           content: const Text(
-            'You have unsaved changes. Are you sure you want to leave?',
-            style: TextStyle(color: Color(0xFFFFFFFF)),
+            AppStrings.unsavedChangesMessage,
+            style: TextStyle(color: AppColors.white),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: const Text(
-                'Cancel',
-                style: TextStyle(color: Color(0xFFFFFFFF)),
+                AppStrings.cancel,
+                style: TextStyle(color: AppColors.white),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               child: const Text(
-                'Discard',
-                style: TextStyle(color: Color(0xFFFFFFFF)),
-              ), // Couleur blanche fixe
+                AppStrings.delete,
+                style: TextStyle(color: AppColors.white),
+              ),
             ),
           ],
         ),
@@ -142,7 +142,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           _isEnabled != original.isEnabled;
     } else {
       // Check against default values for new alarm
-      return _labelController.text != AppConstants.defaultAlarmLabel ||
+      return _labelController.text != AppStrings.defaultAlarmLabel ||
           _selectedWeekDays.isNotEmpty ||
           !_vibrate ||
           _snoozeMinutes != AppConstants.defaultSnoozeMinutes ||
@@ -177,47 +177,47 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            _isEditMode ? 'Edit Alarm' : 'Add Alarm',
+            _isEditMode ? AppStrings.editAlarmTitle : AppStrings.addAlarmTitle,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: const Color(0xFFFFFFFF),
+              color: AppColors.white,
             ),
           ),
           centerTitle: true,
-          elevation: 0,
+          elevation: AppSizes.appBarElevation,
           actions: [
             FilledButton(
               onPressed: _saveAlarm,
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusCircular),
                 ),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
+                  horizontal: AppSizes.spacingLarge,
+                  vertical: AppSizes.spacingSmall,
                 ),
               ),
-              child: Text(_isEditMode ? 'Update' : 'Save'),
+              child: Text(_isEditMode ? AppStrings.edit : AppStrings.save),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSizes.spacingMedium),
           ],
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: AppSizes.paddingCard,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Time Picker Section
               _buildTimeSection(),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSizes.spacingLarge),
 
               // Label Section
               _buildLabelSection(),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSizes.spacingLarge),
 
               // Repeat Section
               _buildRepeatSection(),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSizes.spacingLarge),
 
               // Settings Section
               _buildSettingsSection(),
@@ -235,46 +235,46 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
         onTap: _selectTime,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: AppSizes.paddingCard,
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppSizes.spacingMedium),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                 ),
                 child: const Icon(
                   Icons.access_time,
-                  color: Color(0xFFFFFFFF),
-                  size: 24,
+                  color: AppColors.white,
+                  size: AppSizes.iconLarge,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSizes.spacingMedium),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Alarm Time',
+                      AppStrings.alarmTime,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFFFFFFF),
+                        color: AppColors.white,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSizes.spacingXs),
                     Text(
                       _formatTime(_selectedTime),
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
-                            color: const Color(0xFFFFFFFF),
+                            color: AppColors.white,
                             fontWeight: FontWeight.w700,
                           ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.keyboard_arrow_right, color: Color(0xFFFFFFFF)),
+              const Icon(Icons.keyboard_arrow_right, color: AppColors.white),
             ],
           ),
         ),
@@ -286,47 +286,47 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   Widget _buildLabelSection() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: AppSizes.paddingCard,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSizes.spacingMedium),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                   ),
                   child: const Icon(
                     Icons.label,
-                    color: Color(0xFFFFFFFF),
-                    size: 24,
+                    color: AppColors.white,
+                    size: AppSizes.iconLarge,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSizes.spacingMedium),
                 Text(
-                  'Alarm Label',
+                  AppStrings.alarmLabel,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFFFFFFF),
+                    color: AppColors.white,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSizes.spacingMedium),
             TextField(
               controller: _labelController,
               decoration: InputDecoration(
-                hintText: 'Enter alarm name',
+                hintText: AppStrings.enterAlarmName,
                 prefixIcon: const Icon(Icons.edit),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                 ),
               ),
               style: Theme.of(
                 context,
-              ).textTheme.bodyLarge?.copyWith(color: const Color(0xFFFFFFFF)),
+              ).textTheme.bodyLarge?.copyWith(color: AppColors.white),
             ),
           ],
         ),
@@ -338,7 +338,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   Widget _buildRepeatSection() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: AppSizes.paddingCard,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -352,29 +352,29 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                   ),
                   child: const Icon(
                     Icons.repeat,
-                    color: Color(0xFFFFFFFF),
+                    color: AppColors.white,
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSizes.spacingMedium),
                 Text(
                   'Repeat',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFFFFFFF),
+                    color: AppColors.white,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSizes.spacingMedium),
             _buildPresetSelector(),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSizes.spacingMedium),
             const Divider(),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSizes.spacingMedium),
             Text(
-              'Custom Days',
+              AppStrings.customDays,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: const Color(0xFFFFFFFF),
+                color: AppColors.white,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -394,31 +394,31 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           // Sound Selection
           ListTile(
             leading: Container(
-              padding: const EdgeInsets.all(8),
+              padding: AppSizes.paddingAll,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.music_note,
-                color: Color(0xFFFFFFFF),
+                color: AppColors.white,
                 size: 20,
               ),
             ),
             title: const Text(
               'Ringtone',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              style: TextStyle(color: AppColors.white),
             ),
             subtitle: Text(
               _getSoundDisplayName(_selectedSoundPath),
               style: const TextStyle(
-                color: Color(0xFFFFFFFF),
+                color: AppColors.white,
                 fontWeight: FontWeight.w500,
               ),
             ),
             trailing: const Icon(
               Icons.keyboard_arrow_right,
-              color: Color(0xFFFFFFFF),
+              color: AppColors.white,
             ),
             onTap: _selectSound,
           ),
@@ -426,24 +426,24 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           // Vibration Setting
           SwitchListTile(
             secondary: Container(
-              padding: const EdgeInsets.all(8),
+              padding: AppSizes.paddingAll,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.vibration,
-                color: Color(0xFFFFFFFF),
+                color: AppColors.white,
                 size: 20,
               ),
             ),
             title: const Text(
               'Vibrate',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              style: TextStyle(color: AppColors.white),
             ),
             subtitle: Text(
               _vibrate ? 'Device will vibrate' : 'Silent vibration',
-              style: const TextStyle(color: Color(0xFFFFFFFF)),
+              style: const TextStyle(color: AppColors.white),
             ),
             value: _vibrate,
             onChanged: (value) {
@@ -456,31 +456,27 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           // Snooze Setting
           ListTile(
             leading: Container(
-              padding: const EdgeInsets.all(8),
+              padding: AppSizes.paddingAll,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.snooze,
-                color: Color(0xFFFFFFFF),
-                size: 20,
-              ),
+              child: const Icon(Icons.snooze, color: AppColors.white, size: 20),
             ),
             title: const Text(
               'Snooze Duration',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              style: TextStyle(color: AppColors.white),
             ),
             subtitle: Text(
               '$_snoozeMinutes minutes',
               style: const TextStyle(
-                color: Color(0xFFFFFFFF),
+                color: AppColors.white,
                 fontWeight: FontWeight.w500,
               ),
             ),
             trailing: const Icon(
               Icons.keyboard_arrow_right,
-              color: Color(0xFFFFFFFF),
+              color: AppColors.white,
             ),
             onTap: _selectSnoozeTime,
           ),
@@ -488,31 +484,31 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           // Unlock Method Setting
           ListTile(
             leading: Container(
-              padding: const EdgeInsets.all(8),
+              padding: AppSizes.paddingAll,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.lock_open,
-                color: Color(0xFFFFFFFF),
+                color: AppColors.white,
                 size: 20,
               ),
             ),
             title: const Text(
               'Unlock Method',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              style: TextStyle(color: AppColors.white),
             ),
             subtitle: Text(
               _unlockMethod.displayName,
               style: const TextStyle(
-                color: Color(0xFFFFFFFF),
+                color: AppColors.white,
                 fontWeight: FontWeight.w500,
               ),
             ),
             trailing: const Icon(
               Icons.keyboard_arrow_right,
-              color: Color(0xFFFFFFFF),
+              color: AppColors.white,
             ),
             onTap: _selectUnlockMethod,
           ),
@@ -539,7 +535,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           'Quick Select',
           style: Theme.of(
             context,
-          ).textTheme.labelMedium?.copyWith(color: const Color(0xFFFFFFFF)),
+          ).textTheme.labelMedium?.copyWith(color: AppColors.white),
         ),
         const SizedBox(height: 8),
         Row(
@@ -550,23 +546,23 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                       onPressed: () => _selectPreset('weekday'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        foregroundColor: const Color(0xFFFFFFFF),
+                        foregroundColor: AppColors.white,
                       ),
                       child: const Text(
                         'Weekday',
-                        style: TextStyle(color: Color(0xFFFFFFFF)),
+                        style: TextStyle(color: AppColors.white),
                       ),
                     )
                   : OutlinedButton(
                       onPressed: () => _selectPreset('weekday'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        foregroundColor: const Color(0xFFFFFFFF),
-                        side: const BorderSide(color: Color(0xFFFFFFFF)),
+                        foregroundColor: AppColors.white,
+                        side: const BorderSide(color: AppColors.white),
                       ),
                       child: const Text(
                         'Weekday',
-                        style: TextStyle(color: Color(0xFFFFFFFF)),
+                        style: TextStyle(color: AppColors.white),
                       ),
                     ),
             ),
@@ -577,23 +573,23 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                       onPressed: () => _selectPreset('weekend'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        foregroundColor: const Color(0xFFFFFFFF),
+                        foregroundColor: AppColors.white,
                       ),
                       child: const Text(
                         'Weekend',
-                        style: TextStyle(color: Color(0xFFFFFFFF)),
+                        style: TextStyle(color: AppColors.white),
                       ),
                     )
                   : OutlinedButton(
                       onPressed: () => _selectPreset('weekend'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        foregroundColor: const Color(0xFFFFFFFF),
-                        side: const BorderSide(color: Color(0xFFFFFFFF)),
+                        foregroundColor: AppColors.white,
+                        side: const BorderSide(color: AppColors.white),
                       ),
                       child: const Text(
                         'Weekend',
-                        style: TextStyle(color: Color(0xFFFFFFFF)),
+                        style: TextStyle(color: AppColors.white),
                       ),
                     ),
             ),
@@ -604,23 +600,23 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                       onPressed: () => _selectPreset('all'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        foregroundColor: const Color(0xFFFFFFFF),
+                        foregroundColor: AppColors.white,
                       ),
                       child: const Text(
                         'Daily',
-                        style: TextStyle(color: Color(0xFFFFFFFF)),
+                        style: TextStyle(color: AppColors.white),
                       ),
                     )
                   : OutlinedButton(
                       onPressed: () => _selectPreset('all'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        foregroundColor: const Color(0xFFFFFFFF),
-                        side: const BorderSide(color: Color(0xFFFFFFFF)),
+                        foregroundColor: AppColors.white,
+                        side: const BorderSide(color: AppColors.white),
                       ),
                       child: const Text(
                         'Daily',
-                        style: TextStyle(color: Color(0xFFFFFFFF)),
+                        style: TextStyle(color: AppColors.white),
                       ),
                     ),
             ),
@@ -663,14 +659,12 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             weekDays[index],
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isSelected
-                  ? const Color(0xFFFFFFFF)
-                  : const Color(0xFFFFFFFF),
+              color: isSelected ? AppColors.white : AppColors.white,
             ),
           ),
           selected: isSelected,
           selectedColor: Theme.of(context).colorScheme.primary,
-          checkmarkColor: const Color(0xFFFFFFFF),
+          checkmarkColor: AppColors.white,
           onSelected: (selected) {
             setState(() {
               if (selected) {
@@ -690,7 +684,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       context: context,
       initialTime: _selectedTime,
       helpText: 'Select alarm time',
-      cancelText: 'Cancel',
+      cancelText: AppStrings.cancel,
       confirmText: 'Set Time',
       builder: (context, child) {
         return Theme(
@@ -727,7 +721,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       builder: (context) => AlertDialog(
         title: const Text(
           'Snooze Duration',
-          style: TextStyle(color: Color(0xFFFFFFFF)),
+          style: TextStyle(color: AppColors.white),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -736,10 +730,10 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                 (minutes) => ListTile(
                   title: Text(
                     '$minutes minutes',
-                    style: const TextStyle(color: Color(0xFFFFFFFF)),
+                    style: const TextStyle(color: AppColors.white),
                   ),
                   trailing: _snoozeMinutes == minutes
-                      ? const Icon(Icons.check, color: Color(0xFFFFFFFF))
+                      ? const Icon(Icons.check, color: AppColors.white)
                       : null,
                   onTap: () {
                     setState(() {
@@ -755,8 +749,8 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              AppStrings.cancel,
+              style: TextStyle(color: AppColors.white),
             ),
           ),
         ],
@@ -770,7 +764,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       builder: (context) => AlertDialog(
         title: const Text(
           'Unlock Method',
-          style: TextStyle(color: Color(0xFFFFFFFF)),
+          style: TextStyle(color: AppColors.white),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -779,18 +773,18 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                 (method) => ListTile(
                   leading: Icon(
                     _getUnlockMethodIcon(method),
-                    color: const Color(0xFFFFFFFF),
+                    color: AppColors.white,
                   ),
                   title: Text(
                     method.displayName,
-                    style: const TextStyle(color: Color(0xFFFFFFFF)),
+                    style: const TextStyle(color: AppColors.white),
                   ),
                   subtitle: Text(
                     method.description,
-                    style: const TextStyle(color: Color(0xFFFFFFFF)),
+                    style: const TextStyle(color: AppColors.white),
                   ),
                   trailing: _unlockMethod == method
-                      ? const Icon(Icons.check, color: Color(0xFFFFFFFF))
+                      ? const Icon(Icons.check, color: AppColors.white)
                       : null,
                   onTap: () {
                     Navigator.pop(context, method);
@@ -803,8 +797,8 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              AppStrings.cancel,
+              style: TextStyle(color: AppColors.white),
             ),
           ),
         ],
@@ -816,7 +810,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
         _unlockMethod = selectedMethod;
       });
 
-      // Si math est sélectionné, montrer les options de personnalisation
+      // Si math est s?lectionn?, montrer les options de personnalisation
       if (selectedMethod == AlarmUnlockMethod.math) {
         await _configureMathSettings();
       }
@@ -829,7 +823,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       builder: (context) => AlertDialog(
         title: const Text(
           'Math Configuration',
-          style: TextStyle(color: Color(0xFFFFFFFF)),
+          style: TextStyle(color: AppColors.white),
         ),
         content: StatefulBuilder(
           builder: (context, setDialogState) => SingleChildScrollView(
@@ -837,12 +831,12 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Difficulté avec boutons compacts
+                // Difficult? avec boutons compacts
                 const Text(
                   'Difficulty:',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFFFFFF),
+                    color: AppColors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -866,14 +860,14 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                             backgroundColor: isSelected
                                 ? Theme.of(context).colorScheme.primary
                                 : Theme.of(context).colorScheme.surface,
-                            foregroundColor: const Color(0xFFFFFFFF),
+                            foregroundColor: AppColors.white,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
                           child: Text(
                             difficulty.displayName,
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Color(0xFFFFFFFF),
+                              color: AppColors.white,
                             ),
                           ),
                         ),
@@ -884,12 +878,12 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
 
                 const SizedBox(height: 20),
 
-                // Opérations avec boutons icônes
+                // Op?rations avec boutons ic?nes
                 const Text(
                   'Operations:',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFFFFFF),
+                    color: AppColors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -909,7 +903,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                       context,
                       setDialogState,
                       MathOperations.subtractionOnly,
-                      '−',
+                      '-',
                       _mathOperations == MathOperations.subtractionOnly,
                     ),
                     // Multiplication
@@ -917,15 +911,15 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                       context,
                       setDialogState,
                       MathOperations.multiplicationOnly,
-                      '×',
+                      '?',
                       _mathOperations == MathOperations.multiplicationOnly,
                     ),
-                    // Mélangé
+                    // M?lang?
                     _buildOperationButton(
                       context,
                       setDialogState,
                       MathOperations.mixed,
-                      '±×',
+                      '??',
                       _mathOperations == MathOperations.mixed,
                     ),
                   ],
@@ -947,16 +941,16 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                     children: [
                       Text(
                         'Exemple:',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFFFFFFFF),
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: AppColors.white),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _getExampleProblem(),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFFFFFFF),
+                          color: AppColors.white,
                         ),
                       ),
                     ],
@@ -969,7 +963,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: Color(0xFFFFFFFF))),
+            child: const Text('OK', style: TextStyle(color: AppColors.white)),
           ),
         ],
       ),
@@ -999,7 +993,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             backgroundColor: isSelected
                 ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.surface,
-            foregroundColor: const Color(0xFFFFFFFF),
+            foregroundColor: AppColors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -1035,15 +1029,15 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             : '178 - 89 = ?';
       case MathOperations.multiplicationOnly:
         return _mathDifficulty == MathDifficulty.easy
-            ? '7 × 6 = ?'
+            ? '7 ? 6 = ?'
             : _mathDifficulty == MathDifficulty.medium
-            ? '11 × 12 = ?'
-            : '14 × 15 = ?';
+            ? '11 ? 12 = ?'
+            : '14 ? 15 = ?';
       case MathOperations.mixed:
         return _mathDifficulty == MathDifficulty.easy
             ? '12 + 8 = ?'
             : _mathDifficulty == MathDifficulty.medium
-            ? '9 × 7 = ?'
+            ? '9 ? 7 = ?'
             : '145 - 78 = ?';
     }
   }
@@ -1112,28 +1106,28 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       builder: (context) => AlertDialog(
         title: const Text(
           'Delete Ringtone',
-          style: TextStyle(color: Color(0xFFFFFFFF)),
+          style: TextStyle(color: AppColors.white),
         ),
         content: const Text(
           'Are you sure you want to delete this custom ringtone?',
-          style: TextStyle(color: Color(0xFFFFFFFF)),
+          style: TextStyle(color: AppColors.white),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              AppStrings.cancel,
+              style: TextStyle(color: AppColors.white),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFFFFFFF),
+              foregroundColor: AppColors.white,
             ), // Couleur blanche fixe
             child: const Text(
-              'Delete',
-              style: TextStyle(color: Color(0xFFFFFFFF)),
+              AppStrings.delete,
+              style: TextStyle(color: AppColors.white),
             ),
           ),
         ],
@@ -1142,7 +1136,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
 
     if (confirmed == true) {
       if (mounted) {
-        Navigator.pop(context); // Fermer le dialogue de sélection
+        Navigator.pop(context); // Fermer le dialogue de s?lection
       }
 
       final success = await RingtoneService.instance.deleteCustomRingtone(
@@ -1259,7 +1253,7 @@ class _RingtoneSelectionDialogState extends State<_RingtoneSelectionDialog> {
     return AlertDialog(
       title: const Text(
         'Select Ringtone',
-        style: TextStyle(color: Color(0xFFFFFFFF)),
+        style: TextStyle(color: AppColors.white),
       ),
       contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
       content: SizedBox(
@@ -1295,14 +1289,14 @@ class _RingtoneSelectionDialogState extends State<_RingtoneSelectionDialog> {
                         fontWeight: isSelected
                             ? FontWeight.w600
                             : FontWeight.normal,
-                        color: isSelected ? const Color(0xFFFFFFFF) : null,
+                        color: isSelected ? AppColors.white : null,
                       ),
                     ),
                     subtitle: sound['type'] == 'custom'
                         ? const Text(
                             'Custom',
                             style: TextStyle(
-                              color: Color(0xFFFFFFFF),
+                              color: AppColors.white,
                               fontSize: 12,
                             ),
                           )
@@ -1310,27 +1304,27 @@ class _RingtoneSelectionDialogState extends State<_RingtoneSelectionDialog> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Bouton de prévisualisation
+                        // Bouton de pr?visualisation
                         IconButton(
                           icon: Icon(
                             isPreviewing ? Icons.stop : Icons.play_arrow,
-                            color: const Color(0xFFFFFFFF),
+                            color: AppColors.white,
                             size: 20,
                           ),
                           onPressed: () => _togglePreview(soundPath),
                           tooltip: isPreviewing ? 'Stop' : 'Play',
                         ),
-                        // Bouton de suppression pour les sonneries personnalisées
+                        // Bouton de suppression pour les sonneries personnalis?es
                         if (sound['type'] == 'custom')
                           IconButton(
                             icon: const Icon(
                               Icons.delete,
-                              color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                              color: AppColors.white, // Couleur blanche fixe
                               size: 18,
                             ),
                             onPressed: () =>
                                 widget.onDeleteCustomRingtone(soundPath),
-                            tooltip: 'Delete',
+                            tooltip: AppStrings.delete,
                           ),
                       ],
                     ),
@@ -1346,12 +1340,12 @@ class _RingtoneSelectionDialogState extends State<_RingtoneSelectionDialog> {
             ListTile(
               leading: const Icon(
                 Icons.add,
-                color: Color(0xFFFFFFFF),
+                color: AppColors.white,
               ), // Couleur blanche fixe
               title: const Text(
                 'Import Custom Ringtone',
                 style: TextStyle(
-                  color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                  color: AppColors.white, // Couleur blanche fixe
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1370,8 +1364,8 @@ class _RingtoneSelectionDialogState extends State<_RingtoneSelectionDialog> {
             Navigator.pop(context);
           },
           child: const Text(
-            'Cancel',
-            style: TextStyle(color: Color(0xFFFFFFFF)),
+            AppStrings.cancel,
+            style: TextStyle(color: AppColors.white),
           ),
         ),
       ],

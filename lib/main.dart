@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'utils/constants.dart';
 import 'utils/app_theme.dart';
 import 'utils/theme_manager.dart';
 import 'services/alarm_manager_service.dart';
 import 'services/alarm_monitor_service.dart';
 import 'services/android_alarm_service.dart';
+import 'constants/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -152,11 +152,11 @@ class _BeepSquaredAppState extends State<BeepSquaredApp>
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: AppConstants.appName,
+      title: AppStrings.appName,
       theme: _currentTheme ?? AppTheme.dayTheme, // Use loaded theme or default
-      darkTheme: AppTheme.darkTheme,
+      darkTheme: AppTheme.eveningTheme,
       themeMode: ThemeMode.light, // Always use light mode for adaptive theming
-      home: const HomeScreen(title: AppConstants.appName),
+      home: const HomeScreen(title: AppStrings.appName),
       navigatorKey: BeepSquaredApp.navigatorKey,
       debugShowCheckedModeBanner: false,
     );

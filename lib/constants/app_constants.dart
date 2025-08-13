@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// Application constants following naming conventions
+/// Legacy constants - to be migrated to structured constants
+///
+/// This file maintains compatibility during the migration to the new
+/// structured constants architecture (AppStrings, AppColors, AppSizes).
+///
+/// TODO: Migrate all usages to the new structured constants and remove this file.
 class AppConstants {
-  // Private constructor to prevent instantiation
   AppConstants._();
+
+  // === LEGACY COMPATIBILITY ===
+  // These constants are kept for backwards compatibility during migration
+  // They should be replaced with AppStrings.*, AppColors.*, AppSizes.* equivalents
 
   // App information
   static const String appName = 'Beep Squared';
@@ -24,7 +32,7 @@ class AppConstants {
 
   // Alarm related strings
   static const String noAlarmsMessage = 'No alarms set';
-  static const String addAlarmTooltip = 'Add Alarm';
+  static const String addAlarmTooltip = 'Add alarm';
   static const String alarmSetMessage = 'Alarm set for';
   static const String alarmUpdatedMessage = 'Alarm updated for';
   static const String alarmDeletedMessage = 'Alarm deleted';

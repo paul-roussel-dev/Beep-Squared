@@ -1,12 +1,12 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../utils/constants.dart';
 import '../utils/theme_manager.dart';
 import '../models/alarm.dart';
 import '../services/alarm_service.dart';
 import '../services/alarm_scheduler_service.dart';
 import '../services/alarm_manager_service.dart';
 import '../widgets/alarm_card.dart';
+import '../constants/constants.dart';
 import 'add_alarm_screen.dart';
 import 'settings_screen.dart';
 
@@ -60,9 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                'Some alarm features may be limited. Please restart the app if alarms don\'t work properly.',
-              ),
+              content: Text(AppStrings.alarmServiceLimitedMessage),
               duration: Duration(seconds: 5),
               backgroundColor: Colors.orange,
             ),
@@ -73,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Alarm initialization error: $e'),
+              content: Text('${AppStrings.alarmInitializationError}: $e'),
               duration: const Duration(seconds: 8),
               backgroundColor: Colors.red,
             ),
@@ -103,18 +101,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exit App'),
-        content: const Text(
-          'Are you sure you want to exit ${AppConstants.appName}?',
-        ),
+        title: const Text(AppStrings.exitApp),
+        content: Text(AppStrings.exitAppConfirm(AppStrings.appName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Exit'),
+            child: const Text(AppStrings.exit),
           ),
         ],
       ),
@@ -154,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
             widget.title,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: const Color(0xFFFFFFFF),
+              color: AppColors.white,
             ),
           ),
           centerTitle: true,
@@ -165,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () => _navigateToSettings(),
-              tooltip: 'Settings',
+              tooltip: AppStrings.settings,
             ),
             if (_alarms.isNotEmpty)
               PopupMenuButton<String>(
@@ -181,14 +177,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(
                           Icons.clear_all,
-                          color: Color(0xFFFFFFFF), // Couleur blanche fixe
-                          size: 20,
+                          color: AppColors.white,
+                          size: AppSizes.iconMedium,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppSizes.spacingSmall),
                         Text(
-                          'Clear all',
+                          AppStrings.clearAll,
                           style: TextStyle(
-                            color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                            color: AppColors.white,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -205,15 +201,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(
-                      color: Color(0xFFFFFFFF), // Couleur blanche fixe
-                    ),
-                    const SizedBox(height: 16),
+                    const CircularProgressIndicator(color: AppColors.white),
+                    const SizedBox(height: AppSizes.spacingMedium),
                     Text(
-                      'Loading alarms...',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFFFFFFFF), // Couleur blanche fixe
-                      ),
+                      AppStrings.loadingAlarms,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: AppColors.white),
                     ),
                   ],
                 ),
@@ -221,13 +215,13 @@ class _HomeScreenState extends State<HomeScreen> {
             : _alarms.isEmpty
             ? _buildEmptyState()
             : _buildAlarmsList(),
-        floatingActionButton: FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton(
           onPressed: _addAlarm,
-          tooltip: AppConstants.addAlarmTooltip,
-          icon: const Icon(Icons.add),
-          label: const Text('Add Alarm'),
+          tooltip: AppStrings.addAlarm,
           elevation: 6,
+          child: const Icon(Icons.add),
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
@@ -240,46 +234,41 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: AppSizes.paddingAllLarge,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.alarm,
-                size: 64,
-                color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                size: AppSizes.iconXxl,
+                color: AppColors.white,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSizes.spacingXl),
             Text(
-              AppConstants.noAlarmsMessage,
+              AppStrings.noAlarmsMessage,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: const Color(0xFFFFFFFF), // Couleur blanche fixe
+                color: AppColors.white,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSizes.spacingMedium),
             Text(
-              'Create your first alarm to get started.\nTap the button below to begin.',
+              AppStrings.createFirstAlarm,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFFFFFFFF), // Couleur blanche fixe
+                color: AppColors.white,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSizes.spacingXl),
             FilledButton.icon(
               onPressed: _addAlarm,
               icon: const Icon(Icons.add),
-              label: const Text('Add Your First Alarm'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-              ),
+              label: const Text(AppStrings.addYourFirstAlarm),
+              style: FilledButton.styleFrom(padding: AppSizes.paddingButton),
             ),
           ],
         ),
@@ -299,20 +288,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return CustomScrollView(
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: AppSizes.paddingAll,
           sliver: SliverToBoxAdapter(
             child: Row(
               children: [
                 const Icon(
                   Icons.access_time,
-                  size: 20,
-                  color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                  size: AppSizes.iconMedium,
+                  color: AppColors.white,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSizes.spacingSmall),
                 Text(
-                  '${_alarms.length} alarm${_alarms.length > 1 ? 's' : ''}',
+                  AppStrings.alarmCount(_alarms.length),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: const Color(0xFFFFFFFF), // Couleur blanche fixe
+                    color: AppColors.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -324,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
           delegate: SliverChildBuilderDelegate((context, index) {
             final alarm = sortedAlarms[index];
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: AppSizes.marginCard,
               child: AlarmCard(
                 alarm: alarm,
                 onToggle: () => _toggleAlarm(alarm),
@@ -335,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }, childCount: sortedAlarms.length),
         ),
         const SliverToBoxAdapter(
-          child: SizedBox(height: 100), // Space for FAB
+          child: SizedBox(height: AppSizes.fabSpacing), // Space for FAB
         ),
       ],
     );
@@ -361,10 +350,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${AppConstants.alarmSetMessage} ${result.formattedTime}',
-            ),
-            backgroundColor: const Color(0xFFFFFFFF),
+            content: Text(AppStrings.alarmSetFor(result.formattedTime)),
+            backgroundColor: AppColors.notificationSuccess,
           ),
         );
       }
@@ -393,10 +380,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${AppConstants.alarmUpdatedMessage} ${result.formattedTime}',
-            ),
-            backgroundColor: const Color(0xFFFFFFFF),
+            content: Text(AppStrings.alarmUpdatedFor(result.formattedTime)),
+            backgroundColor: AppColors.notificationSuccess,
           ),
         );
       }
@@ -423,21 +408,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Alarm'),
-        content: Text(
-          'Are you sure you want to delete the alarm "${alarm.label}"?',
-        ),
+        title: const Text(AppStrings.deleteAlarm),
+        content: Text(AppStrings.deleteAlarmConfirm(alarm.label)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFFFFFFF),
-            ), // Couleur blanche fixe
-            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.white),
+            child: const Text(AppStrings.delete),
           ),
         ],
       ),
@@ -454,8 +435,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(AppConstants.alarmDeletedMessage),
-            backgroundColor: Color(0xFFFFFFFF),
+            content: Text(AppStrings.alarmDeleted),
+            backgroundColor: AppColors.notificationSuccess,
           ),
         );
       }
@@ -466,19 +447,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear All Alarms'),
-        content: const Text('Are you sure you want to delete all alarms?'),
+        title: const Text(AppStrings.clearAllAlarms),
+        content: const Text(AppStrings.clearAllAlarmsConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFFFFFFF),
-            ), // Couleur blanche fixe
-            child: const Text('Clear All'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.white),
+            child: const Text(AppStrings.clearAll),
           ),
         ],
       ),
@@ -491,8 +470,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('All alarms cleared'),
-            backgroundColor: Color(0xFFFFFFFF),
+            content: Text(AppStrings.allAlarmsCleared),
+            backgroundColor: AppColors.notificationSuccess,
           ),
         );
       }
@@ -507,13 +486,13 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: Colors.white.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Icon(
         isCurrentlyEvening ? Icons.bedtime : Icons.wb_sunny,
         size: 20,
-        color: const Color(0xFFFFFFFF),
+        color: AppColors.white,
       ),
     );
   }

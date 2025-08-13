@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/alarm.dart';
-import '../utils/constants.dart';
+import '../constants/constants.dart';
 
 /// Service for managing alarms with persistent storage
 ///

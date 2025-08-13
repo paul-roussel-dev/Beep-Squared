@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/constants.dart';
+import '../constants/constants.dart';
 import '../utils/app_theme.dart';
 import '../utils/theme_manager.dart';
 import '../main.dart';
@@ -89,29 +89,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Settings')),
+        appBar: AppBar(title: const Text(AppStrings.settings)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text(AppStrings.settings),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saveSettings,
-            tooltip: 'Save',
+            tooltip: AppStrings.save,
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(AppConstants.spacingMedium),
+        padding: AppSizes.paddingCard,
         children: [
           // Theme Settings Section
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(AppConstants.spacingMedium),
+              padding: AppSizes.paddingCard,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -119,24 +119,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Icon(
                         AppTheme.isEveningTime ? Icons.bedtime : Icons.wb_sunny,
-                        color: const Color(0xFFFFFFFF),
+                        color: AppColors.white,
                       ),
-                      const SizedBox(width: AppConstants.spacingSmall),
+                      const SizedBox(width: 8),
                       Text(
                         'Adaptive Theme',
                         style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(color: const Color(0xFFFFFFFF)),
+                            ?.copyWith(color: AppColors.white),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppConstants.spacingSmall),
+                  const SizedBox(height: 8),
                   Text(
                     'Configure automatic color change schedule',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFFFFFFFF),
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.white),
                   ),
-                  const SizedBox(height: AppConstants.spacingLarge),
+                  const SizedBox(height: 24),
 
                   // Evening Start Hour
                   ListTile(
@@ -190,12 +190,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: AppConstants.spacingMedium),
+                  const SizedBox(height: AppSizes.spacingMedium),
 
                   // Preview current mode
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(AppConstants.spacingMedium),
+                    padding: AppSizes.paddingCard,
                     decoration: BoxDecoration(
                       color: Theme.of(
                         context,
@@ -217,26 +217,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ? Icons.bedtime
                               : Icons.wb_sunny,
                           size: 32,
-                          color: const Color(0xFFFFFFFF),
+                          color: AppColors.white,
                         ),
-                        const SizedBox(height: AppConstants.spacingSmall),
+                        const SizedBox(height: 8),
                         Text(
                           AppTheme.isEveningTimeCustom(
                                 _eveningStartHour,
                                 _eveningEndHour,
                               )
-                              ? 'Mode Nuit Actif'
-                              : 'Mode Jour Actif',
+                              ? 'Night Mode Active'
+                              : 'Day Mode Active',
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFFFFFFFF),
+                                color: AppColors.white,
                               ),
                         ),
                         Text(
                           'Based on current time: ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}',
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: const Color(0xFFFFFFFF)),
+                              ?.copyWith(color: AppColors.white),
                         ),
                       ],
                     ),
@@ -246,41 +246,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: AppConstants.spacingLarge),
+          const SizedBox(height: 24),
 
-          const SizedBox(height: AppConstants.spacingLarge),
+          const SizedBox(height: 24),
 
           // About Section
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(AppConstants.spacingMedium),
+              padding: AppSizes.paddingCard,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.info_outline, color: Color(0xFFFFFFFF)),
-                      const SizedBox(width: AppConstants.spacingSmall),
+                      const Icon(Icons.info_outline, color: Colors.white),
+                      const SizedBox(width: 8),
                       Text(
                         'About',
                         style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(color: const Color(0xFFFFFFFF)),
+                            ?.copyWith(color: AppColors.white),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppConstants.spacingMedium),
+                  const SizedBox(height: 16),
                   Text(
                     '🌙 The orange/warm evening theme promotes melatonin production and improves sleep quality',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFFFFFFFF),
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.white),
                   ),
-                  const SizedBox(height: AppConstants.spacingSmall),
+                  const SizedBox(height: 8),
                   Text(
                     '☀️ The blue day theme stimulates alertness and energy',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFFFFFFFF),
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.white),
                   ),
                 ],
               ),

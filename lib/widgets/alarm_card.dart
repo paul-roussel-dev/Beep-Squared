@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/alarm.dart';
 import '../services/ringtone_service.dart';
+import '../constants/constants.dart';
 
 /// Widget displaying an alarm card with all alarm information
 ///
@@ -39,10 +40,10 @@ class AlarmCard extends StatelessWidget {
   String _getUnlockMethodText(AlarmUnlockMethod method) {
     switch (method) {
       case AlarmUnlockMethod.simple:
-        return 'Classique';
+        return AppStrings.alarmTypeClassic;
       case AlarmUnlockMethod.math:
         final difficultyText = _getMathDifficultyText(alarm.mathDifficulty);
-        return 'Math ($difficultyText)';
+        return AppStrings.mathDifficultyDisplay(difficultyText);
     }
   }
 
@@ -50,24 +51,24 @@ class AlarmCard extends StatelessWidget {
   String _getMathDifficultyText(MathDifficulty difficulty) {
     switch (difficulty) {
       case MathDifficulty.easy:
-        return 'Facile';
+        return AppStrings.mathEasy;
       case MathDifficulty.medium:
-        return 'Moyen';
+        return AppStrings.mathMedium;
       case MathDifficulty.hard:
-        return 'Difficile';
+        return AppStrings.mathHard;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: AppSizes.marginCard,
       elevation: alarm.isEnabled ? 2 : 1,
       child: InkWell(
         onTap: onEdit,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: AppSizes.paddingCard,
           child: Row(
             children: [
               // Time and status
@@ -82,48 +83,46 @@ class AlarmCard extends StatelessWidget {
                           alarm.formattedTime,
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                color: const Color(
-                                  0xFFFFFFFF,
-                                ), // Couleur blanche fixe
+                                color: AppColors.white,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 28,
                               ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSizes.spacingSmall),
                         if (!alarm.isEnabled)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: AppSizes.spacingSmall,
+                              vertical: AppSizes.spacingXs,
                             ),
                             decoration: BoxDecoration(
                               color: Theme.of(
                                 context,
                               ).colorScheme.errorContainer,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusMedium,
+                              ),
                             ),
                             child: const Text(
-                              'OFF',
+                              AppStrings.alarmOff,
                               style: TextStyle(
                                 fontSize: 10,
-                                color: Color(
-                                  0xFFFFFFFF,
-                                ), // Couleur blanche fixe
+                                color: AppColors.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSizes.spacingSmall),
                     Text(
                       alarm.label,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: const Color(0xFFFFFFFF), // Couleur blanche fixe
+                        color: AppColors.white,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSizes.spacingMedium),
                     _buildAlarmDetails(),
                   ],
                 ),
@@ -142,64 +141,62 @@ class AlarmCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   PopupMenuButton<String>(
                     icon: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: AppSizes.paddingAll,
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
                         ).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.radiusSmall,
+                        ),
                       ),
                       child: const Icon(
                         Icons.more_vert,
-                        size: 20,
-                        color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                        size: AppSizes.iconMedium,
+                        color: AppColors.white,
                       ),
                     ),
                     onSelected: (value) {
                       switch (value) {
-                        case 'edit':
+                        case AppStrings.edit:
                           onEdit?.call();
                           break;
-                        case 'delete':
+                        case AppStrings.delete:
                           onDelete?.call();
                           break;
                       }
                     },
                     itemBuilder: (context) => [
                       const PopupMenuItem(
-                        value: 'edit',
+                        value: AppStrings.edit,
                         child: Row(
                           children: [
                             Icon(
                               Icons.edit,
-                              size: 18,
-                              color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                              size: AppSizes.iconSmall,
+                              color: AppColors.white,
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppSizes.spacingMedium),
                             Text(
-                              'Edit',
-                              style: TextStyle(color: Color(0xFFFFFFFF)),
+                              AppStrings.editAlarm,
+                              style: TextStyle(color: AppColors.white),
                             ),
                           ],
                         ),
                       ),
                       const PopupMenuItem(
-                        value: 'delete',
+                        value: AppStrings.delete,
                         child: Row(
                           children: [
                             Icon(
                               Icons.delete,
-                              size: 18,
-                              color: Color(0xFFFFFFFF), // Couleur blanche fixe
+                              size: AppSizes.iconSmall,
+                              color: AppColors.white,
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppSizes.spacingMedium),
                             Text(
-                              'Delete',
-                              style: TextStyle(
-                                color: Color(
-                                  0xFFFFFFFF,
-                                ), // Couleur blanche fixe
-                              ),
+                              AppStrings.delete,
+                              style: TextStyle(color: AppColors.white),
                             ),
                           ],
                         ),
@@ -239,7 +236,7 @@ class AlarmCard extends StatelessWidget {
 
         // Vibration
         if (alarm.vibrate)
-          _buildDetailChip(icon: Icons.vibration, text: 'Vibrate'),
+          _buildDetailChip(icon: Icons.vibration, text: AppStrings.vibrate),
       ],
     );
   }
@@ -251,28 +248,31 @@ class AlarmCard extends StatelessWidget {
   }) {
     return Builder(
       builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.spacingSmall,
+          vertical: AppSizes.spacingXs,
+        ),
         decoration: BoxDecoration(
           color: isPrimary
-              ? const Color(0xFFFFFFFF)
+              ? AppColors.white
               : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 14,
-              color: Colors.white, // Couleur blanche uniforme
+              size: AppSizes.iconSmall - 2, // 14
+              color: AppColors.white,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSizes.spacingXs),
             Flexible(
               child: Text(
                 text,
                 style: const TextStyle(
                   fontSize: 12,
-                  color: Colors.white, // Couleur blanche uniforme
+                  color: AppColors.white,
                   fontWeight: FontWeight.w500,
                 ),
                 overflow: TextOverflow.ellipsis,
