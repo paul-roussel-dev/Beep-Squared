@@ -389,6 +389,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
   /// Build settings section
   Widget _buildSettingsSection() {
     return Card(
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
           // Sound Selection

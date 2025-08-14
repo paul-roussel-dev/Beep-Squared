@@ -254,7 +254,7 @@ class AlarmCard extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isPrimary
-              ? AppColors.white
+              ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
         ),
