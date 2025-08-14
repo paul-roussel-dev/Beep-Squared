@@ -391,13 +391,17 @@ class _HomeScreenState extends State<HomeScreen> {
     // Toggle alarm state
     await _alarmService.toggleAlarm(alarm.id);
 
-    // Update alarm scheduling
-    if (alarm.isEnabled) {
-      // Alarm was enabled, now disabled - cancel notification
-      await _schedulerService.cancelAlarm(alarm.id);
+    // Get the updated alarm to check its new state
+    final alarms = await _alarmService.getAlarms();
+    final updatedAlarm = alarms.firstWhere((a) => a.id == alarm.id);
+
+    // Update alarm scheduling based on new state
+    if (updatedAlarm.isEnabled) {
+      // Alarm is now enabled - schedule notification
+      await _schedulerService.scheduleAlarm(updatedAlarm);
     } else {
-      // Alarm was disabled, now enabled - schedule notification
-      await _schedulerService.scheduleAlarm(alarm.copyWith(isEnabled: true));
+      // Alarm is now disabled - cancel notification
+      await _schedulerService.cancelAlarm(alarm.id);
     }
 
     await _loadAlarms();

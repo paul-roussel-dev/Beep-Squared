@@ -331,8 +331,18 @@ class AlarmSchedulerService {
   /// Cancel an alarm notification
   Future<void> cancelAlarm(String alarmId) async {
     try {
+      // Cancel Flutter notification
       final int notificationId = alarmId.hashCode;
       await _notifications.cancel(notificationId);
+      
+      // Cancel Android native alarm as well
+      try {
+        await AndroidAlarmService.instance.cancelAlarm(alarmId);
+        debugPrint('Android native alarm cancelled: $alarmId');
+      } catch (e) {
+        debugPrint('Error cancelling Android native alarm $alarmId: $e');
+      }
+      
       debugPrint('Alarm cancelled: $alarmId');
     } catch (e) {
       debugPrint('Error cancelling alarm $alarmId: $e');
@@ -350,6 +360,15 @@ class AlarmSchedulerService {
   Future<void> cancelAllAlarms() async {
     try {
       await _notifications.cancelAll();
+      
+      // Cancel all Android native alarms as well
+      try {
+        await AndroidAlarmService.instance.cancelAllAlarms();
+        debugPrint('All Android native alarms cancelled');
+      } catch (e) {
+        debugPrint('Error cancelling all Android native alarms: $e');
+      }
+      
       debugPrint('All alarms cancelled');
     } catch (e) {
       debugPrint('Error cancelling all alarms: $e');
@@ -366,6 +385,13 @@ class AlarmSchedulerService {
             try {
               final int notificationId = alarm.id.hashCode;
               await _notifications.cancel(notificationId);
+              
+              // Also cancel Android native alarm for each alarm
+              try {
+                await AndroidAlarmService.instance.cancelAlarm(alarm.id);
+              } catch (androidError) {
+                debugPrint('Error cancelling Android alarm ${alarm.id}: $androidError');
+              }
             } catch (individualError) {
               debugPrint(
                 'Error cancelling individual alarm ${alarm.id}: $individualError',
