@@ -911,15 +911,15 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                       context,
                       setDialogState,
                       MathOperations.multiplicationOnly,
-                      '?',
+                      '×',
                       _mathOperations == MathOperations.multiplicationOnly,
                     ),
-                    // M?lang?
+                    // Mélangé
                     _buildOperationButton(
                       context,
                       setDialogState,
                       MathOperations.mixed,
-                      '??',
+                      '±×',
                       _mathOperations == MathOperations.mixed,
                     ),
                   ],
@@ -1029,15 +1029,15 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
             : '178 - 89 = ?';
       case MathOperations.multiplicationOnly:
         return _mathDifficulty == MathDifficulty.easy
-            ? '7 ? 6 = ?'
+            ? '7 × 6 = ?'
             : _mathDifficulty == MathDifficulty.medium
-            ? '11 ? 12 = ?'
-            : '14 ? 15 = ?';
+            ? '11 × 12 = ?'
+            : '14 × 15 = ?';
       case MathOperations.mixed:
         return _mathDifficulty == MathDifficulty.easy
             ? '12 + 8 = ?'
             : _mathDifficulty == MathDifficulty.medium
-            ? '9 ? 7 = ?'
+            ? '9 × 7 = ?'
             : '145 - 78 = ?';
     }
   }
