@@ -246,7 +246,9 @@ class AppTheme {
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.white.withValues(alpha: 0.3); // Use white with transparency
+            return AppColors.white.withValues(
+              alpha: 0.3,
+            ); // Use white with transparency
           }
           return colorScheme.onSurface.withValues(alpha: 0.2);
         }),
