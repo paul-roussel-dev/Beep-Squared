@@ -687,19 +687,38 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
       cancelText: AppStrings.cancel,
       confirmText: 'Set Time',
       builder: (context, child) {
+        final theme = Theme.of(context);
         return Theme(
-          data: Theme.of(context).copyWith(
+          data: theme.copyWith(
+            // Configuration pour les boutons de texte
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(
-                  0xFFFFFFFF,
-                ), // Couleur blanche pour les boutons
+                foregroundColor: AppColors.white,
               ),
             ),
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              onSurface: const Color(
-                0xFFFFFFFF,
-              ), // Couleur blanche pour le texte
+            // Configuration du ColorScheme pour le TimePicker
+            colorScheme: theme.colorScheme.copyWith(
+              // Couleurs pour les éléments principaux
+              primary: theme.colorScheme.primary, // Couleur des aiguilles et sélection
+              onPrimary: AppColors.white, // Texte sur éléments primaires
+              surface: theme.colorScheme.surface, // Fond du picker
+              onSurface: AppColors.white, // Texte principal et numéros
+              // Couleurs pour les états interactifs
+              onSurfaceVariant: AppColors.textSecondary, // Texte secondaire
+              outline: theme.colorScheme.outline, // Bordures
+            ),
+            // Configuration spécifique pour le TimePicker
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: theme.colorScheme.surface,
+              hourMinuteTextColor: AppColors.white,
+              hourMinuteColor: theme.colorScheme.surface,
+              dayPeriodTextColor: AppColors.white,
+              dayPeriodColor: theme.colorScheme.surface,
+              dialHandColor: theme.colorScheme.primary, // Couleur des aiguilles
+              dialBackgroundColor: theme.colorScheme.surface,
+              dialTextColor: AppColors.white,
+              entryModeIconColor: AppColors.white,
+              helpTextStyle: TextStyle(color: AppColors.white),
             ),
           ),
           child: child!,
