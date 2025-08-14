@@ -241,12 +241,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: AppSizes.spacingMedium),
                 ],
               ),
             ),
           ),
-
-          const SizedBox(height: 24),
 
           const SizedBox(height: 24),
 

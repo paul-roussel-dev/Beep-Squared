@@ -125,9 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (context) => const SettingsScreen()),
     );
 
-    // If settings changed, reload theme cache and trigger a complete rebuild
+    // If settings changed, trigger a complete rebuild
     if (mounted && settingsChanged == true) {
-      await ThemeManager.instance.reloadTimeSettings();
       setState(() {});
     }
   }

@@ -53,7 +53,13 @@ class AppStrings {
   static const String errorCancellingAlarm = 'Error cancelling alarm';
 
   // === SETTINGS SCREEN ===
-  static const String settingsSaved = 'Settings saved - Theme updated';
+  // === SNACKBAR MESSAGES ===
+  static const String alarmSaved = 'Alarm saved';
+  static const String settingsSaved = 'Settings saved';
+  static const String themeUpdated = 'Theme updated';
+  static const String eveningModeEnabled = 'Evening mode enabled';
+  static const String dayModeEnabled = 'Day mode enabled';
+  static const String automaticModeRestored = 'Automatic mode restored';
   static const String errorSavingSettings = 'Error saving settings';
   static const String adaptiveTheme = 'Adaptive Theme';
   static const String adaptiveThemeDescription =
