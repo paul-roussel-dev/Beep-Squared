@@ -416,6 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: AppColors.white),
             child: const Text(AppStrings.cancel),
           ),
           TextButton(
