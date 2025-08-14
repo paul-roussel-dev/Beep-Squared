@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 
 /// Application theme configuration following Material Design 3
 class AppTheme {
@@ -239,13 +240,13 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return colorScheme.primary;
+            return AppColors.white; // Use white for consistency
           }
           return colorScheme.onSurface.withValues(alpha: 0.5);
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return colorScheme.primary.withValues(alpha: 0.3);
+            return AppColors.white.withValues(alpha: 0.3); // Use white with transparency
           }
           return colorScheme.onSurface.withValues(alpha: 0.2);
         }),
